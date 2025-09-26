@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace IntroToMonoGame
 {
@@ -24,6 +25,7 @@ namespace IntroToMonoGame
 
         private BasicEffect _effect; // Fixed-function style shader that understands our W/V/P and vertex colors
         private float _rotationDeg;  // Rotation around Z in degrees (for a bit of motion)
+        private float yPos;
         #endregion
 
         public Main()
@@ -46,7 +48,7 @@ namespace IntroToMonoGame
 
             // --- View (camera) ---
             // Camera positioned at (0,0,10), looking at the origin, with "up" as +Y
-            _view = Matrix.CreateLookAt(new Vector3(0, 0, 10), Vector3.Zero, Vector3.UnitY);
+            _view = Matrix.CreateLookAt(new Vector3(0, 0, 2), Vector3.Zero, Vector3.UnitY);
 
             // --- Projection (lens) ---
             // FOV = 90° (Pi/2), aspect ratio = 16:9, near=1, far=1000
@@ -54,10 +56,20 @@ namespace IntroToMonoGame
                 MathHelper.PiOver2, 16f / 9f, 1f, 1000f);
 
             // --- Geometry: two colored endpoints define one line (LineList uses pairs) ---
+            float axisLength = 0.5f;
             _line = new[]
             {
-                new VertexPositionColor(new Vector3(-2, 0, 0), Color.Red),    // start
-                new VertexPositionColor(new Vector3( 2, 0, 0), Color.Yellow), // end
+                //x-axis
+                new VertexPositionColor(new Vector3(-axisLength, 0, 0), Color.Red),    // start-x
+                new VertexPositionColor(new Vector3( axisLength, 0, 0), Color.Red), // end-x
+
+                //y-axis
+                new VertexPositionColor(new Vector3(0, axisLength, 0), Color.Green),    // start-y
+                new VertexPositionColor(new Vector3( 0, -axisLength, 0), Color.Green), // end-y
+
+                //z-axis
+                new VertexPositionColor(new Vector3(0, 0, axisLength), Color.Blue),    // start-z
+                new VertexPositionColor(new Vector3(0, 0, -axisLength), Color.Blue), // end-z
             };
 
             // --- Effect: tells the GPU how to transform and shade our vertices ---
@@ -67,7 +79,7 @@ namespace IntroToMonoGame
                 // Lighting is off by default; not needed for unlit colored lines.
             };
 
-            _rotationDeg = 0f;
+            _rotationDeg = 0;
 
             base.Initialize();
         }
@@ -86,13 +98,7 @@ namespace IntroToMonoGame
 
         protected override void Update(GameTime gameTime)
         {
-            // Escape to exit (handy in class demos)
-            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
-                Exit();
-
-            // Time-based rotation: ~45° per second
-            _rotationDeg += (float)gameTime.ElapsedGameTime.TotalSeconds * 45f;
-
+            yPos -= (float)(1f * gameTime.ElapsedGameTime.TotalSeconds);
             base.Update(gameTime);
         }
 
@@ -102,7 +108,9 @@ namespace IntroToMonoGame
             GraphicsDevice.Clear(Color.CornflowerBlue);
 
             // 1) WORLD: rotate the line around Z so students see motion (SRT lives here)
-            _effect.World = Matrix.CreateRotationZ(MathHelper.ToRadians(_rotationDeg));
+            //  _effect.World = Matrix.CreateRotationZ(MathHelper.ToRadians(_rotationDeg));
+
+            _effect.World = Matrix.CreateTranslation(new Vector3(0, yPos, 0));
 
             // 2) VIEW: camera transform (where we look from, where we look to, what's "up")
             _effect.View = _view;
@@ -123,7 +131,7 @@ namespace IntroToMonoGame
                 //   vertexOffset=0         → start at the beginning of the array
                 //   primitiveCount=1       → number of LINES to draw (not vertices!)
                 GraphicsDevice.DrawUserPrimitives(
-                    PrimitiveType.LineList, _line, vertexOffset: 0, primitiveCount: 1);
+                    PrimitiveType.LineList, _line, vertexOffset: 0, primitiveCount: 3);
             }
 
             base.Draw(gameTime);
