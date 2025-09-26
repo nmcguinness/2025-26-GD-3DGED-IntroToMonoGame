@@ -26,6 +26,7 @@ namespace IntroToMonoGame
         private BasicEffect _effect; // Fixed-function style shader that understands our W/V/P and vertex colors
         private float _rotationDeg;  // Rotation around Z in degrees (for a bit of motion)
         private float yPos;
+        private float xRot=0, yRot=0;
         #endregion
 
         public Main()
@@ -48,12 +49,12 @@ namespace IntroToMonoGame
 
             // --- View (camera) ---
             // Camera positioned at (0,0,10), looking at the origin, with "up" as +Y
-            _view = Matrix.CreateLookAt(new Vector3(0, 0, 2), Vector3.Zero, Vector3.UnitY);
+            _view = Matrix.CreateLookAt(new Vector3(0, 0, 1), Vector3.Zero, Vector3.UnitY);
 
             // --- Projection (lens) ---
             // FOV = 90° (Pi/2), aspect ratio = 16:9, near=1, far=1000
             _projection = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.PiOver2, 16f / 9f, 1f, 1000f);
+                MathHelper.PiOver2, 16f / 9f, 0.1f, 1000f);
 
             // --- Geometry: two colored endpoints define one line (LineList uses pairs) ---
             float axisLength = 0.5f;
@@ -98,7 +99,10 @@ namespace IntroToMonoGame
 
         protected override void Update(GameTime gameTime)
         {
-            yPos -= (float)(1f * gameTime.ElapsedGameTime.TotalSeconds);
+
+            xRot += (float)(15 * gameTime.ElapsedGameTime.TotalSeconds);
+            yRot += (float)(30 * gameTime.ElapsedGameTime.TotalSeconds);
+
             base.Update(gameTime);
         }
 
@@ -110,7 +114,10 @@ namespace IntroToMonoGame
             // 1) WORLD: rotate the line around Z so students see motion (SRT lives here)
             //  _effect.World = Matrix.CreateRotationZ(MathHelper.ToRadians(_rotationDeg));
 
-            _effect.World = Matrix.CreateTranslation(new Vector3(0, yPos, 0));
+            //world = I * S * Ro * T
+            _effect.World = Matrix.Identity
+                            * Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
+                               * Matrix.CreateRotationY(MathHelper.ToRadians(yRot));
 
             // 2) VIEW: camera transform (where we look from, where we look to, what's "up")
             _effect.View = _view;
