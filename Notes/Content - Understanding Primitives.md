@@ -1197,7 +1197,3 @@ As you develop your game engine, you'll use PrimitiveType constantly. Mastering 
 - **DirectX Documentation**: [Primitive Topologies](https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-primitive-topologies)
 - **OpenGL Tutorial**: [Drawing Primitives](https://www.khronos.org/opengl/wiki/Primitive)
 - **Game Engine Architecture (3rd Edition)**: Chapter 10 - The Rendering Engine
-
----
-
-**Next Lesson**: Vertex Buffers and Index Buffers - Deep dive into GPU memory management
