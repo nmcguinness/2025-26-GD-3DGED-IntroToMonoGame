@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using SharpDX.Direct3D9;
 using System;
 
 namespace IntroToMonoGame
@@ -71,15 +72,22 @@ namespace IntroToMonoGame
         }
         protected override void Update(GameTime gameTime)
         {
+            KeyboardState kbState = Keyboard.GetState();
+            if (kbState.IsKeyDown(Keys.A))
+                yRot += 1;
+            else if (kbState.IsKeyDown(Keys.D))
+                yRot -= 1;
+
             base.Update(gameTime);
         }
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
+            GraphicsDevice.Clear(Color.Black);
 
             _pyramidPrimitive.Draw(gameTime,
                 _effect,
-                Matrix.Identity,
+                Matrix.Identity 
+                * Matrix.CreateRotationY(MathHelper.ToRadians(yRot)),
                 _view,
                 _projection,
                 GraphicsDevice);
