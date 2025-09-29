@@ -9,6 +9,7 @@ The module descriptor can be viewed [here](https://courses.dkit.ie/index.cfm/pag
 
 ## Required Reading 
 
+- [PrimitiveType in 3D Graphics in MonoGame (or DirectX or OpenGL)](Notes/Content%20-%20Understanding%20Primitives.md)
 - [Drawing 3D Primitives using Lists or Strips](https://docs.monogame.net/articles/getting_to_know/howto/graphics/HowTo_Draw_3D_Primitives.html#:~:text=Overview,basic%20effect%20and%20transformation%20matrices.)
 - [Quick Understanding of Homogeneous Coordinates for Computer Graphics](https://www.youtube.com/watch?v=o-xwmTODTUI)
 - [Article - World, View and Projection Transformation Matrices](http://www.codinglabs.net/article_world_view_projection_matrix.aspx)
@@ -19,7 +20,7 @@ The module descriptor can be viewed [here](https://courses.dkit.ie/index.cfm/pag
 
 ## Exercises
 
-- [Understanding PrimitiveType](Exercises/Understanding%20PrimitiveType.md)
+- [Understanding PrimitiveType](Exercises/Exercises%20-%20Understanding%20Primitives.md)
 
 
 ## To Do 
