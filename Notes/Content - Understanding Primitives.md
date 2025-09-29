@@ -44,1095 +44,676 @@ Each type interprets vertex buffers differently, affecting how geometry is assem
 
 ---
 
-## Understanding Primitive Assembly
+# MonoGame Primitive Types (LineList, LineStrip, TriangleList, TriangleStrip)
 
-Before diving into each type, it's essential to understand **primitive assembly** - the process where the GPU takes your vertex buffer and groups vertices into primitives (points, lines, or triangles) based on the PrimitiveType.
-
-### Key Concepts
-
-**Vertex Order Matters**: The order vertices appear in your buffer determines how they're connected.
-
-**Winding Order**: For triangles, clockwise vs counter-clockwise vertex order determines front-facing vs back-facing (crucial for backface culling).
-
-**Primitive Count**: The number of primitives drawn is calculated differently for each type.
+> A practical, code-first lesson in drawing basic geometry with `GraphicsDevice.DrawUserPrimitives<T>()` in MonoGame (C#).
 
 ---
 
-## PrimitiveType.PointList
+## Overview
 
-### Description
+MonoGame’s `PrimitiveType` tells the GPU **how to interpret a sequence of vertices**. The same vertex list can be connected in different ways to produce lines or triangles:
 
-`PointList` renders each vertex as an individual point (pixel or small square on screen). Vertices are **not connected** to each other in any way.
+- `LineList` – independent line segments (2 vertices per line).
+- `LineStrip` – a connected path of lines (each extra vertex adds a line).
+- `TriangleList` – independent triangles (3 vertices per triangle).
+- `TriangleStrip` – a connected fan/strip of triangles (each extra vertex adds a triangle).
 
-### Characteristics
+All examples below use:
+- `VertexPositionColor` for clarity,
+- a simple `BasicEffect` (no custom shader),
+- a fixed camera (`World`, `View`, `Projection`),
+- `RasterizerState.CullNone` to avoid back-face culling during learning.
 
-- **Vertices per primitive**: 1
-- **Primitive count formula**: `vertexCount`
-- **Connectivity**: None - completely independent points
-- **Use cases**: Particle systems, stars, debug markers, point clouds
-
-### Visual Representation
-
-```
-Vertex Buffer: [V0, V1, V2, V3, V4]
-
-Rendered as:
-    V0•    V1•    V2•    V3•    V4•
-
-Each vertex becomes one point
-```
-
-### Complete Implementation
-
-```csharp
-public class PointListDemo
-{
-    private GraphicsDevice graphicsDevice;
-    private BasicEffect effect;
-    private VertexPositionColor[] vertices;
-    
-    public PointListDemo(GraphicsDevice device)
-    {
-        graphicsDevice = device;
-        InitializeEffect();
-        CreatePointCloud();
-    }
-    
-    private void InitializeEffect()
-    {
-        effect = new BasicEffect(graphicsDevice)
-        {
-            VertexColorEnabled = true,
-            World = Matrix.Identity,
-            View = Matrix.CreateLookAt(
-                new Vector3(0, 0, 10), Vector3.Zero, Vector3.Up),
-            Projection = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.PiOver4, 
-                graphicsDevice.Viewport.AspectRatio, 
-                0.1f, 100f)
-        };
-    }
-    
-    private void CreatePointCloud()
-    {
-        // Create 100 random points
-        Random rand = new Random();
-        vertices = new VertexPositionColor[100];
-        
-        for (int i = 0; i < vertices.Length; i++)
-        {
-            Vector3 position = new Vector3(
-                (float)(rand.NextDouble() * 10 - 5),  // -5 to 5
-                (float)(rand.NextDouble() * 10 - 5),
-                (float)(rand.NextDouble() * 10 - 5)
-            );
-            
-            Color color = new Color(
-                (float)rand.NextDouble(),
-                (float)rand.NextDouble(),
-                (float)rand.NextDouble()
-            );
-            
-            vertices[i] = new VertexPositionColor(position, color);
-        }
-    }
-    
-    public void Draw()
-    {
-        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-            
-            // Draw all vertices as individual points
-            graphicsDevice.DrawUserPrimitives(
-                PrimitiveType.PointList,
-                vertices,
-                0,                    // vertex offset
-                vertices.Length       // primitive count = vertex count
-            );
-        }
-    }
-}
-```
-
-### Point Size Control
-
-Note: Point size in modern graphics APIs is often fixed at 1 pixel. For larger points, you typically need to:
-- Use geometry shaders (not available in MonoGame)
-- Render small billboarded quads instead
-- Use sprites for 2D effects
+> Tip: For 3D, **winding order** (clockwise vs counter-clockwise) affects which faces are visible. We disable culling here to keep things simple.
 
 ---
 
-## PrimitiveType.LineList
+## Common Setup (shared concepts)
 
-### Description
-
-`LineList` connects vertices in **pairs** to form independent line segments. Every two consecutive vertices form one line. Vertices are not shared between lines.
-
-### Characteristics
-
-- **Vertices per primitive**: 2
-- **Primitive count formula**: `vertexCount / 2`
-- **Connectivity**: Paired - (V0-V1), (V2-V3), (V4-V5)...
-- **Use cases**: Wireframes, debug visualization, grids, axes, bounding boxes
-- **Important**: Vertex count MUST be even
-
-### Visual Representation
-
-```
-Vertex Buffer: [V0, V1, V2, V3, V4, V5]
-
-Rendered as:
-    V0────V1    V2────V3    V4────V5
-    
-    Line 0      Line 1      Line 2
-
-Each pair of vertices forms one disconnected line
-```
-
-### Complete Implementation
+You’ll see these pieces repeated in each complete example:
 
 ```csharp
-public class LineListDemo
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+
+namespace PrimitiveTypesLesson
 {
-    private GraphicsDevice graphicsDevice;
-    private BasicEffect effect;
-    private VertexPositionColor[] gridVertices;
-    
-    public LineListDemo(GraphicsDevice device)
+    public class Game1 : Game
     {
-        graphicsDevice = device;
-        InitializeEffect();
-        CreateGrid(10, 10, 1.0f);
-    }
-    
-    private void InitializeEffect()
-    {
-        effect = new BasicEffect(graphicsDevice)
+        private GraphicsDeviceManager _graphics;
+        private BasicEffect _effect;
+
+        public Game1()
         {
-            VertexColorEnabled = true,
-            World = Matrix.Identity,
-            View = Matrix.CreateLookAt(
-                new Vector3(0, 15, 15), Vector3.Zero, Vector3.Up),
-            Projection = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.PiOver4, 
-                graphicsDevice.Viewport.AspectRatio, 
-                0.1f, 100f)
-        };
-    }
-    
-    private void CreateGrid(int width, int depth, float spacing)
-    {
-        List<VertexPositionColor> vertices = new List<VertexPositionColor>();
-        
-        float halfWidth = width * spacing / 2.0f;
-        float halfDepth = depth * spacing / 2.0f;
-        
-        // Create vertical lines (along Z axis)
-        for (int x = 0; x <= width; x++)
-        {
-            float xPos = x * spacing - halfWidth;
-            
-            // Start point of line
-            vertices.Add(new VertexPositionColor(
-                new Vector3(xPos, 0, -halfDepth), Color.Gray));
-            
-            // End point of line
-            vertices.Add(new VertexPositionColor(
-                new Vector3(xPos, 0, halfDepth), Color.Gray));
+            _graphics = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
+            IsMouseVisible = true;
         }
-        
-        // Create horizontal lines (along X axis)
-        for (int z = 0; z <= depth; z++)
+
+        protected override void LoadContent()
         {
-            float zPos = z * spacing - halfDepth;
-            
-            // Start point of line
-            vertices.Add(new VertexPositionColor(
-                new Vector3(-halfWidth, 0, zPos), Color.Gray));
-            
-            // End point of line
-            vertices.Add(new VertexPositionColor(
-                new Vector3(halfWidth, 0, zPos), Color.Gray));
-        }
-        
-        gridVertices = vertices.ToArray();
-    }
-    
-    public void Draw()
-    {
-        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-            
-            // Primitive count = total vertices / 2
-            graphicsDevice.DrawUserPrimitives(
-                PrimitiveType.LineList,
-                gridVertices,
-                0,
-                gridVertices.Length / 2  // Each line uses 2 vertices
-            );
-        }
-    }
-}
-
-// Usage Example: Drawing a wireframe cube
-public class WireframeCube
-{
-    public static VertexPositionColor[] CreateWireframeCube(float size = 1.0f)
-    {
-        float half = size / 2.0f;
-        Color color = Color.White;
-        
-        // 8 corners of cube
-        Vector3 v0 = new Vector3(-half, half, half);    // Front top left
-        Vector3 v1 = new Vector3(half, half, half);     // Front top right
-        Vector3 v2 = new Vector3(half, -half, half);    // Front bottom right
-        Vector3 v3 = new Vector3(-half, -half, half);   // Front bottom left
-        Vector3 v4 = new Vector3(-half, half, -half);   // Back top left
-        Vector3 v5 = new Vector3(half, half, -half);    // Back top right
-        Vector3 v6 = new Vector3(half, -half, -half);   // Back bottom right
-        Vector3 v7 = new Vector3(-half, -half, -half);  // Back bottom left
-        
-        // 12 edges, 2 vertices per edge = 24 vertices
-        return new VertexPositionColor[]
-        {
-            // Front face edges
-            new VertexPositionColor(v0, color), new VertexPositionColor(v1, color),
-            new VertexPositionColor(v1, color), new VertexPositionColor(v2, color),
-            new VertexPositionColor(v2, color), new VertexPositionColor(v3, color),
-            new VertexPositionColor(v3, color), new VertexPositionColor(v0, color),
-            
-            // Back face edges
-            new VertexPositionColor(v4, color), new VertexPositionColor(v5, color),
-            new VertexPositionColor(v5, color), new VertexPositionColor(v6, color),
-            new VertexPositionColor(v6, color), new VertexPositionColor(v7, color),
-            new VertexPositionColor(v7, color), new VertexPositionColor(v4, color),
-            
-            // Connecting edges
-            new VertexPositionColor(v0, color), new VertexPositionColor(v4, color),
-            new VertexPositionColor(v1, color), new VertexPositionColor(v5, color),
-            new VertexPositionColor(v2, color), new VertexPositionColor(v6, color),
-            new VertexPositionColor(v3, color), new VertexPositionColor(v7, color),
-        };
-    }
-}
-```
-
----
-
-## PrimitiveType.LineStrip
-
-### Description
-
-`LineStrip` creates a **continuous chain** of connected line segments. Each vertex after the first connects to the previous vertex, forming a polyline.
-
-### Characteristics
-
-- **Vertices per primitive**: 2 for first line, +1 for each additional
-- **Primitive count formula**: `vertexCount - 1`
-- **Connectivity**: Continuous - (V0-V1), (V1-V2), (V2-V3)...
-- **Use cases**: Paths, trajectories, contours, graphs, outlines
-- **Efficiency**: Uses fewer vertices than LineList for connected lines
-
-### Visual Representation
-
-```
-Vertex Buffer: [V0, V1, V2, V3, V4, V5]
-
-Rendered as:
-    V0────V1────V2────V3────V4────V5
-    
-    Line 0  Line 1  Line 2  Line 3  Line 4
-
-Each vertex connects to the next, forming a continuous path
-```
-
-### Complete Implementation
-
-```csharp
-public class LineStripDemo
-{
-    private GraphicsDevice graphicsDevice;
-    private BasicEffect effect;
-    private VertexPositionColor[] pathVertices;
-    
-    public LineStripDemo(GraphicsDevice device)
-    {
-        graphicsDevice = device;
-        InitializeEffect();
-        CreateSineWavePath();
-    }
-    
-    private void InitializeEffect()
-    {
-        effect = new BasicEffect(graphicsDevice)
-        {
-            VertexColorEnabled = true,
-            World = Matrix.Identity,
-            View = Matrix.CreateLookAt(
-                new Vector3(0, 5, 10), Vector3.Zero, Vector3.Up),
-            Projection = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.PiOver4, 
-                graphicsDevice.Viewport.AspectRatio, 
-                0.1f, 100f)
-        };
-    }
-    
-    private void CreateSineWavePath()
-    {
-        int segments = 100;
-        pathVertices = new VertexPositionColor[segments + 1];
-        
-        for (int i = 0; i <= segments; i++)
-        {
-            float t = (float)i / segments; // 0 to 1
-            float x = (t - 0.5f) * 10;     // -5 to 5
-            float y = (float)Math.Sin(t * MathHelper.TwoPi * 2) * 2;
-            float z = 0;
-            
-            // Color gradient along path
-            Color color = Color.Lerp(Color.Red, Color.Blue, t);
-            
-            pathVertices[i] = new VertexPositionColor(
-                new Vector3(x, y, z), color);
-        }
-    }
-    
-    public void Draw()
-    {
-        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-            
-            // Primitive count = vertices - 1
-            graphicsDevice.DrawUserPrimitives(
-                PrimitiveType.LineStrip,
-                pathVertices,
-                0,
-                pathVertices.Length - 1
-            );
-        }
-    }
-}
-
-// Usage Example: Drawing a circle outline
-public static VertexPositionColor[] CreateCircleLineStrip(
-    float radius, int segments = 32)
-{
-    VertexPositionColor[] vertices = new VertexPositionColor[segments + 1];
-    
-    for (int i = 0; i <= segments; i++)
-    {
-        float angle = (float)i / segments * MathHelper.TwoPi;
-        float x = radius * (float)Math.Cos(angle);
-        float z = radius * (float)Math.Sin(angle);
-        
-        vertices[i] = new VertexPositionColor(
-            new Vector3(x, 0, z), Color.Yellow);
-    }
-    
-    return vertices;
-}
-```
-
-### LineList vs LineStrip Comparison
-
-```csharp
-// Drawing a square outline
-
-// Using LineList - requires 8 vertices (duplicates)
-VertexPositionColor[] lineList = new VertexPositionColor[]
-{
-    new VertexPositionColor(new Vector3(-1, 1, 0), Color.White),
-    new VertexPositionColor(new Vector3(1, 1, 0), Color.White),
-    
-    new VertexPositionColor(new Vector3(1, 1, 0), Color.White),
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.White),
-    
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.White),
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.White),
-    
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.White),
-    new VertexPositionColor(new Vector3(-1, 1, 0), Color.White),
-};
-
-// Using LineStrip - requires 5 vertices (first vertex repeated at end)
-VertexPositionColor[] lineStrip = new VertexPositionColor[]
-{
-    new VertexPositionColor(new Vector3(-1, 1, 0), Color.White),
-    new VertexPositionColor(new Vector3(1, 1, 0), Color.White),
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.White),
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.White),
-    new VertexPositionColor(new Vector3(-1, 1, 0), Color.White), // Close loop
-};
-```
-
----
-
-## PrimitiveType.TriangleList
-
-### Description
-
-`TriangleList` is the **most common** PrimitiveType in 3D graphics. It groups vertices in sets of three to form **independent triangles**. Each triangle is completely separate from others.
-
-### Characteristics
-
-- **Vertices per primitive**: 3
-- **Primitive count formula**: `vertexCount / 3`
-- **Connectivity**: Grouped - (V0,V1,V2), (V3,V4,V5), (V6,V7,V8)...
-- **Use cases**: 3D models, meshes, solid geometry, textured surfaces
-- **Important**: Vertex count MUST be divisible by 3
-- **Winding order matters**: Determines front/back faces
-
-### Visual Representation
-
-```
-Vertex Buffer: [V0, V1, V2, V3, V4, V5, V6, V7, V8]
-
-Rendered as:
-       V1              V4              V7
-      /  \            /  \            /  \
-     /    \          /    \          /    \
-   V0──────V2      V3──────V5      V6──────V8
-   
-   Triangle 0      Triangle 1      Triangle 2
-
-Each group of 3 vertices forms one independent triangle
-```
-
-### Complete Implementation
-
-```csharp
-public class TriangleListDemo
-{
-    private GraphicsDevice graphicsDevice;
-    private BasicEffect effect;
-    private VertexBuffer vertexBuffer;
-    private IndexBuffer indexBuffer;
-    
-    public TriangleListDemo(GraphicsDevice device)
-    {
-        graphicsDevice = device;
-        InitializeEffect();
-        CreateColoredQuad();
-    }
-    
-    private void InitializeEffect()
-    {
-        effect = new BasicEffect(graphicsDevice)
-        {
-            VertexColorEnabled = true,
-            World = Matrix.Identity,
-            View = Matrix.CreateLookAt(
-                new Vector3(0, 0, 5), Vector3.Zero, Vector3.Up),
-            Projection = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.PiOver4, 
-                graphicsDevice.Viewport.AspectRatio, 
-                0.1f, 100f)
-        };
-    }
-    
-    private void CreateColoredQuad()
-    {
-        // Four corners of a quad
-        VertexPositionColor[] vertices = new VertexPositionColor[]
-        {
-            new VertexPositionColor(new Vector3(-1, 1, 0), Color.Red),    // Top left
-            new VertexPositionColor(new Vector3(1, 1, 0), Color.Green),   // Top right
-            new VertexPositionColor(new Vector3(1, -1, 0), Color.Blue),   // Bottom right
-            new VertexPositionColor(new Vector3(-1, -1, 0), Color.Yellow) // Bottom left
-        };
-        
-        // Two triangles to form the quad
-        // IMPORTANT: Counter-clockwise winding for front face
-        short[] indices = new short[]
-        {
-            0, 1, 2,  // First triangle (top-left, top-right, bottom-right)
-            0, 2, 3   // Second triangle (top-left, bottom-right, bottom-left)
-        };
-        
-        // Create vertex buffer
-        vertexBuffer = new VertexBuffer(
-            graphicsDevice,
-            typeof(VertexPositionColor),
-            vertices.Length,
-            BufferUsage.WriteOnly);
-        vertexBuffer.SetData(vertices);
-        
-        // Create index buffer
-        indexBuffer = new IndexBuffer(
-            graphicsDevice,
-            IndexElementSize.SixteenBits,
-            indices.Length,
-            BufferUsage.WriteOnly);
-        indexBuffer.SetData(indices);
-    }
-    
-    public void Draw()
-    {
-        graphicsDevice.SetVertexBuffer(vertexBuffer);
-        graphicsDevice.Indices = indexBuffer;
-        
-        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-            
-            // Draw using indices
-            graphicsDevice.DrawIndexedPrimitives(
-                PrimitiveType.TriangleList,
-                0,              // base vertex
-                0,              // min vertex index
-                2               // primitive count (2 triangles)
-            );
-        }
-    }
-}
-
-// Example: Creating a pyramid without indices
-public static VertexPositionColor[] CreatePyramid(float size = 1.0f)
-{
-    float half = size / 2.0f;
-    Vector3 apex = new Vector3(0, size, 0);
-    
-    // Base vertices
-    Vector3 v0 = new Vector3(-half, 0, half);   // Front left
-    Vector3 v1 = new Vector3(half, 0, half);    // Front right
-    Vector3 v2 = new Vector3(half, 0, -half);   // Back right
-    Vector3 v3 = new Vector3(-half, 0, -half);  // Back left
-    
-    // 4 side triangles + 2 base triangles = 6 triangles = 18 vertices
-    return new VertexPositionColor[]
-    {
-        // Front face
-        new VertexPositionColor(v0, Color.Red),
-        new VertexPositionColor(v1, Color.Red),
-        new VertexPositionColor(apex, Color.Red),
-        
-        // Right face
-        new VertexPositionColor(v1, Color.Green),
-        new VertexPositionColor(v2, Color.Green),
-        new VertexPositionColor(apex, Color.Green),
-        
-        // Back face
-        new VertexPositionColor(v2, Color.Blue),
-        new VertexPositionColor(v3, Color.Blue),
-        new VertexPositionColor(apex, Color.Blue),
-        
-        // Left face
-        new VertexPositionColor(v3, Color.Yellow),
-        new VertexPositionColor(v0, Color.Yellow),
-        new VertexPositionColor(apex, Color.Yellow),
-        
-        // Base - First triangle
-        new VertexPositionColor(v0, Color.Gray),
-        new VertexPositionColor(v2, Color.Gray),
-        new VertexPositionColor(v1, Color.Gray),
-        
-        // Base - Second triangle
-        new VertexPositionColor(v0, Color.Gray),
-        new VertexPositionColor(v3, Color.Gray),
-        new VertexPositionColor(v2, Color.Gray),
-    };
-}
-```
-
-### Understanding Winding Order
-
-```csharp
-// Counter-clockwise (CCW) - Front face (default in MonoGame)
-V0 (0,1)    V1 (1,1)
-    ┌────────┐
-    │     ╱  │
-    │   ╱    │
-    │ ╱      │
-    └────────┘
-V2 (0,0)    V3 (1,0)
-
-// CCW Triangle: V0 -> V1 -> V2 (front face, visible)
-// Clockwise would be: V0 -> V2 -> V1 (back face, culled)
-
-// Configure culling
-graphicsDevice.RasterizerState = new RasterizerState
-{
-    CullMode = CullMode.CullCounterClockwiseFace, // Cull CCW faces
-    // or
-    CullMode = CullMode.CullClockwiseFace,        // Cull CW faces (default)
-    // or
-    CullMode = CullMode.None                       // No culling (slower)
-};
-```
-
----
-
-## PrimitiveType.TriangleStrip
-
-### Description
-
-`TriangleStrip` creates a **connected sequence** of triangles where each new triangle shares an edge with the previous one. This is a memory optimization technique that reduces vertex duplication.
-
-### Characteristics
-
-- **Vertices per primitive**: 3 for first triangle, +1 for each additional
-- **Primitive count formula**: `vertexCount - 2`
-- **Connectivity**: Shared edges - each vertex adds a new triangle
-- **Use cases**: Terrain meshes, ribbons, strips, optimized geometry
-- **Winding order**: Alternates automatically to maintain correct facing
-
-### Visual Representation
-
-```
-Vertex Buffer: [V0, V1, V2, V3, V4, V5]
-
-Rendered as:
-    V0──────V2──────V4
-     │ ╲    │ ╲    │
-     │   ╲  │   ╲  │
-     │     ╲│     ╲│
-    V1──────V3──────V5
-    
-Triangle 0: (V0,V1,V2) - CCW
-Triangle 1: (V2,V1,V3) - CW (automatic flip)
-Triangle 2: (V2,V3,V4) - CCW
-Triangle 3: (V4,V3,V5) - CW (automatic flip)
-
-Winding order alternates to maintain front-facing
-```
-
-### Complete Implementation
-
-```csharp
-public class TriangleStripDemo
-{
-    private GraphicsDevice graphicsDevice;
-    private BasicEffect effect;
-    private VertexPositionColor[] stripVertices;
-    
-    public TriangleStripDemo(GraphicsDevice device)
-    {
-        graphicsDevice = device;
-        InitializeEffect();
-        CreateRibbon();
-    }
-    
-    private void InitializeEffect()
-    {
-        effect = new BasicEffect(graphicsDevice)
-        {
-            VertexColorEnabled = true,
-            World = Matrix.Identity,
-            View = Matrix.CreateLookAt(
-                new Vector3(0, 3, 10), Vector3.Zero, Vector3.Up),
-            Projection = Matrix.CreatePerspectiveFieldOfView(
-                MathHelper.PiOver4, 
-                graphicsDevice.Viewport.AspectRatio, 
-                0.1f, 100f)
-        };
-    }
-    
-    private void CreateRibbon()
-    {
-        int segments = 20;
-        stripVertices = new VertexPositionColor[(segments + 1) * 2];
-        
-        float width = 1.0f;
-        int vertexIndex = 0;
-        
-        for (int i = 0; i <= segments; i++)
-        {
-            float t = (float)i / segments;
-            float x = (t - 0.5f) * 10; // -5 to 5
-            float y = (float)Math.Sin(t * MathHelper.TwoPi * 2) * 2;
-            
-            // Color gradient
-            Color color = Color.Lerp(Color.Red, Color.Blue, t);
-            
-            // Top vertex
-            stripVertices[vertexIndex++] = new VertexPositionColor(
-                new Vector3(x, y + width, 0), color);
-            
-            // Bottom vertex
-            stripVertices[vertexIndex++] = new VertexPositionColor(
-                new Vector3(x, y - width, 0), color);
-        }
-    }
-    
-    public void Draw()
-    {
-        foreach (EffectPass pass in effect.CurrentTechnique.Passes)
-        {
-            pass.Apply();
-            
-            // Primitive count = vertices - 2
-            graphicsDevice.DrawUserPrimitives(
-                PrimitiveType.TriangleStrip,
-                stripVertices,
-                0,
-                stripVertices.Length - 2
-            );
-        }
-    }
-}
-
-// Example: Grid terrain using TriangleStrip
-public class TerrainStrip
-{
-    public static VertexPositionColor[] CreateTerrainStrip(
-        int width, int depth, float spacing = 1.0f)
-    {
-        List<VertexPositionColor> vertices = new List<VertexPositionColor>();
-        Random rand = new Random();
-        
-        for (int z = 0; z < depth; z++)
-        {
-            for (int x = 0; x <= width; x++)
+            _effect = new BasicEffect(GraphicsDevice)
             {
-                // Two vertices per column (zig-zag pattern)
-                float height1 = (float)rand.NextDouble() * 2;
-                float height2 = (float)rand.NextDouble() * 2;
-                
-                // Current row
-                vertices.Add(new VertexPositionColor(
-                    new Vector3(x * spacing, height1, z * spacing),
-                    Color.Green));
-                
-                // Next row
-                vertices.Add(new VertexPositionColor(
-                    new Vector3(x * spacing, height2, (z + 1) * spacing),
-                    Color.DarkGreen));
-            }
-            
-            // Degenerate triangles to jump to next strip (if not last row)
-            if (z < depth - 1)
-            {
-                // Repeat last vertex
-                vertices.Add(vertices[vertices.Count - 1]);
-                
-                // Add first vertex of next strip
-                Vector3 nextPos = new Vector3(
-                    0, (float)rand.NextDouble() * 2, (z + 1) * spacing);
-                vertices.Add(new VertexPositionColor(nextPos, Color.Green));
-            }
+                VertexColorEnabled = true,
+                World = Matrix.Identity,
+                View = Matrix.CreateLookAt(new Vector3(0, 0, 5f), Vector3.Zero, Vector3.Up),
+                Projection = Matrix.CreatePerspectiveFieldOfView(
+                    MathHelper.PiOver4,
+                    GraphicsDevice.Viewport.AspectRatio,
+                    0.1f, 100f)
+            };
+
+            // Disable culling to make learning visuals predictable
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
         }
         
-        return vertices.ToArray();
+        protected override void Update(GameTime gameTime)
+        {
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape))
+                Exit();
+            base.Update(gameTime);
+        }
     }
 }
 ```
 
-### TriangleList vs TriangleStrip Comparison
+Each specific primitive type adds vertex data and a `Draw()` implementation.
+
+---
+
+## `LineList` – Independent Segments
+
+**When to use:** Grid lines, axes, debug rays, wireframe edges you control manually.
+
+**How it works:** Every **pair** of vertices is one line.
+
+- Vertices required = `2 * lineCount`
+- Primitive count for draw call = `vertices.Length / 2`
+
+### Complete Example (drop-in Game1)
 
 ```csharp
-// Creating a quad (2 triangles)
+// File: Game1.cs
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 
-// Using TriangleList with indices - 4 unique vertices, 6 indices
-VertexPositionColor[] vertices = new VertexPositionColor[4]
+namespace PrimitiveTypesLesson
 {
-    new VertexPositionColor(new Vector3(-1, 1, 0), Color.White),  // 0
-    new VertexPositionColor(new Vector3(1, 1, 0), Color.White),   // 1
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.White),  // 2
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.White)  // 3
-};
-short[] indices = { 0, 1, 2, 0, 2, 3 };  // 6 indices
+    public class Game1 : Game
+    {
+        private GraphicsDeviceManager _graphics;
+        private BasicEffect _effect;
+        private VertexPositionColor[] _verts;
 
-// Using TriangleStrip - 4 vertices, no indices needed
-VertexPositionColor[] stripVertices = new VertexPositionColor[4]
-{
-    new VertexPositionColor(new Vector3(-1, 1, 0), Color.White),  // 0
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.White), // 1
-    new VertexPositionColor(new Vector3(1, 1, 0), Color.White),   // 2
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.White)   // 3
-};
-// Triangle 0: (0,1,2), Triangle 1: (2,1,3) - automatic winding
+        public Game1()
+        {
+            _graphics = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
+            IsMouseVisible = true;
+        }
 
-// Memory comparison:
-// TriangleList: 4 vertices + 6 indices = 10 elements transmitted
-// TriangleStrip: 4 vertices = 4 elements transmitted (60% reduction!)
+        protected override void LoadContent()
+        {
+            _effect = new BasicEffect(GraphicsDevice)
+            {
+                VertexColorEnabled = true,
+                World = Matrix.Identity,
+                View = Matrix.CreateLookAt(new Vector3(0, 0, 5f), Vector3.Zero, Vector3.Up),
+                Projection = Matrix.CreatePerspectiveFieldOfView(
+                    MathHelper.PiOver4,
+                    GraphicsDevice.Viewport.AspectRatio,
+                    0.1f, 100f)
+            };
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            // Two independent line segments: red horizontal, green vertical crosshair
+            _verts = new VertexPositionColor[]
+            {
+                new(new Vector3(-1, 0, 0), Color.Red),  new(new Vector3(1, 0, 0), Color.Red),   // line 1
+                new(new Vector3(0, -1, 0), Color.Green),new(new Vector3(0, 1, 0), Color.Green)  // line 2
+            };
+        }
+
+        protected override void Update(GameTime gameTime)
+        {
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
+            base.Update(gameTime);
+        }
+
+        protected override void Draw(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+
+            foreach (var pass in _effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                int primitiveCount = _verts.Length / 2; // 2 verts per line
+                GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(
+                    PrimitiveType.LineList, _verts, 0, primitiveCount);
+            }
+
+            base.Draw(gameTime);
+        }
+    }
+}
 ```
 
-### When to Use TriangleStrip
+---
 
-**Use TriangleStrip when:**
-- Rendering long, continuous strips of geometry (terrain rows, ribbons)
-- Vertex cache coherency is important (sequential vertex access)
-- Memory bandwidth is a bottleneck
+## `LineStrip` – Connected Polyline
 
-**Use TriangleList when:**
-- Geometry is not naturally strip-oriented
-- Using indexed buffers for vertex reuse across the model
-- Flexibility in triangle ordering is needed
-- Simpler to understand and maintain
+**When to use:** Paths, outlines, continuous strokes (e.g., graph plots).
+
+**How it works:** Each **new** vertex adds a line to the previous vertex.
+
+- Vertices required = `N` (for N-1 lines)
+- Primitive count for draw call = `vertices.Length - 1`
+
+### Complete Example
+
+```csharp
+// File: Game1.cs
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+
+namespace PrimitiveTypesLesson
+{
+    public class Game1 : Game
+    {
+        private GraphicsDeviceManager _graphics;
+        private BasicEffect _effect;
+        private VertexPositionColor[] _verts;
+
+        public Game1()
+        {
+            _graphics = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
+            IsMouseVisible = true;
+        }
+
+        protected override void LoadContent()
+        {
+            _effect = new BasicEffect(GraphicsDevice)
+            {
+                VertexColorEnabled = true,
+                World = Matrix.Identity,
+                View = Matrix.CreateLookAt(new Vector3(0, 0, 6f), Vector3.Zero, Vector3.Up),
+                Projection = Matrix.CreatePerspectiveFieldOfView(
+                    MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 0.1f, 100f)
+            };
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            // A zig-zag polyline
+            _verts = new VertexPositionColor[]
+            {
+                new(new Vector3(-2f,  0.0f, 0), Color.Yellow),
+                new(new Vector3(-1f,  0.7f, 0), Color.Orange),
+                new(new Vector3( 0f, -0.5f, 0), Color.Red),
+                new(new Vector3( 1f,  0.8f, 0), Color.Magenta),
+                new(new Vector3( 2f,  0.0f, 0), Color.Purple),
+            };
+        }
+
+        protected override void Update(GameTime gameTime)
+        {
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
+            base.Update(gameTime);
+        }
+
+        protected override void Draw(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(Color.Black);
+
+            foreach (var pass in _effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                int primitiveCount = _verts.Length - 1; // N-1 lines
+                GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(
+                    PrimitiveType.LineStrip, _verts, 0, primitiveCount);
+            }
+
+            base.Draw(gameTime);
+        }
+    }
+}
+```
+
+---
+
+## `TriangleList` – Independent Triangles
+
+**When to use:** Most meshes, quads split into two triangles, UI panels, billboards.
+
+**How it works:** **Every 3 vertices** is one triangle (not connected to others unless you repeat vertices).
+
+- Vertices required = `3 * triangleCount`
+- Primitive count = `vertices.Length / 3`
+
+### Complete Example
+
+```csharp
+// File: Game1.cs
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+
+namespace PrimitiveTypesLesson
+{
+    public class Game1 : Game
+    {
+        private GraphicsDeviceManager _graphics;
+        private BasicEffect _effect;
+        private VertexPositionColor[] _verts;
+
+        public Game1()
+        {
+            _graphics = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
+            IsMouseVisible = true;
+        }
+
+        protected override void LoadContent()
+        {
+            _effect = new BasicEffect(GraphicsDevice)
+            {
+                VertexColorEnabled = true,
+                World = Matrix.Identity,
+                View = Matrix.CreateLookAt(new Vector3(0, 0, 6f), Vector3.Zero, Vector3.Up),
+                Projection = Matrix.CreatePerspectiveFieldOfView(
+                    MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 0.1f, 100f)
+            };
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            // A quad made from two independent triangles (triangle list)
+            // v0---v1
+            // |  \  |
+            // v2---v3
+            var v0 = new VertexPositionColor(new Vector3(-1,  1, 0), Color.Red);
+            var v1 = new VertexPositionColor(new Vector3( 1,  1, 0), Color.Green);
+            var v2 = new VertexPositionColor(new Vector3(-1, -1, 0), Color.Blue);
+            var v3 = new VertexPositionColor(new Vector3( 1, -1, 0), Color.Yellow);
+
+            _verts = new[]
+            {
+                v0, v1, v2, // tri 0
+                v2, v1, v3  // tri 1
+            };
+        }
+
+        protected override void Update(GameTime gameTime)
+        {
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
+            base.Update(gameTime);
+        }
+
+        protected override void Draw(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(Color.CornflowerBlue);
+
+            foreach (var pass in _effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                int primitiveCount = _verts.Length / 3; // 3 verts per triangle
+                GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(
+                    PrimitiveType.TriangleList, _verts, 0, primitiveCount);
+            }
+
+            base.Draw(gameTime);
+        }
+    }
+}
+```
+
+---
+
+## `TriangleStrip` – Connected Triangles
+
+**When to use:** Long ribbons, terrain strips, shapes where many triangles share edges.
+
+**How it works:** The first triangle uses vertices 0–2; each **new** vertex adds another triangle with the previous two.
+
+- Vertices required = `N` (for N-2 triangles)
+- Primitive count = `vertices.Length - 2`
+- **Winding flips** every triangle; with culling enabled you’d need `RasterizerState.CullNone` or degenerate triangles to fix seams.
+
+### Complete Example
+
+```csharp
+// File: Game1.cs
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+
+namespace PrimitiveTypesLesson
+{
+    public class Game1 : Game
+    {
+        private GraphicsDeviceManager _graphics;
+        private BasicEffect _effect;
+        private VertexPositionColor[] _verts;
+
+        public Game1()
+        {
+            _graphics = new GraphicsDeviceManager(this);
+            Content.RootDirectory = "Content";
+            IsMouseVisible = true;
+        }
+
+        protected override void LoadContent()
+        {
+            _effect = new BasicEffect(GraphicsDevice)
+            {
+                VertexColorEnabled = true,
+                World = Matrix.Identity,
+                View = Matrix.CreateLookAt(new Vector3(0, 0, 8f), Vector3.Zero, Vector3.Up),
+                Projection = Matrix.CreatePerspectiveFieldOfView(
+                    MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 0.1f, 100f)
+            };
+            GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            // A simple zig-zag strip forming multiple triangles
+            _verts = new[]
+            {
+                new VertexPositionColor(new Vector3(-2f, -1f, 0), Color.Red),
+                new VertexPositionColor(new Vector3(-2f,  1f, 0), Color.Green),
+                new VertexPositionColor(new Vector3(-1f, -1f, 0), Color.Blue),
+                new VertexPositionColor(new Vector3(-1f,  1f, 0), Color.Yellow),
+                new VertexPositionColor(new Vector3( 0f, -1f, 0), Color.Cyan),
+                new VertexPositionColor(new Vector3( 0f,  1f, 0), Color.Magenta),
+                new VertexPositionColor(new Vector3( 1f, -1f, 0), Color.Orange),
+                new VertexPositionColor(new Vector3( 1f,  1f, 0), Color.White),
+            };
+        }
+
+        protected override void Update(GameTime gameTime)
+        {
+            if (Keyboard.GetState().IsKeyDown(Keys.Escape)) Exit();
+            base.Update(gameTime);
+        }
+
+        protected override void Draw(GameTime gameTime)
+        {
+            GraphicsDevice.Clear(Color.DarkSlateGray);
+
+            foreach (var pass in _effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                int primitiveCount = _verts.Length - 2; // N-2 triangles
+                GraphicsDevice.DrawUserPrimitives<VertexPositionColor>(
+                    PrimitiveType.TriangleStrip, _verts, 0, primitiveCount);
+            }
+
+            base.Draw(gameTime);
+        }
+    }
+}
+```
 
 ---
 
 ## Comparison Table
 
-| PrimitiveType | Vertices/Primitive | Primitive Count | Vertex Sharing | Memory Efficiency | Typical Use Cases |
-|---------------|-------------------|-----------------|----------------|-------------------|-------------------|
-| **PointList** | 1 | `count` | None | 100% (each vertex used once) | Particles, stars, debug markers, point clouds |
-| **LineList** | 2 | `count / 2` | None (pairs) | 50% redundancy for connected lines | Wireframes, debug boxes, disconnected segments |
-| **LineStrip** | 1st: 2, then +1 | `count - 1` | Sequential | High (N vertices = N-1 lines) | Paths, contours, continuous lines, graphs |
-| **TriangleList** | 3 | `count / 3` | None (with indexing: high) | Best with indices | 3D models, meshes, general geometry |
-| **TriangleStrip** | 1st: 3, then +1 | `count - 2` | Sequential | Very high (N vertices = N-2 triangles) | Terrain, ribbons, optimized strips |
-
-### Vertex Count Requirements
-
-```csharp
-// Minimum vertices needed for valid rendering:
-
-PrimitiveType.PointList:      1 vertex   (any count >= 1)
-PrimitiveType.LineList:       2 vertices (must be even: 2, 4, 6, 8...)
-PrimitiveType.LineStrip:      2 vertices (any count >= 2)
-PrimitiveType.TriangleList:   3 vertices (must be divisible by 3: 3, 6, 9, 12...)
-PrimitiveType.TriangleStrip:  3 vertices (any count >= 3)
-```
-
-### Performance Characteristics
-
-**GPU Processing Order:**
-1. **Point rendering**: Fastest (minimal processing)
-2. **Line rendering**: Fast (2 vertices per primitive)
-3. **Triangle rendering**: Standard (3 vertices, rasterization overhead)
-
-**Memory Transfer:**
-- **TriangleStrip**: Best for sequential geometry (40-60% reduction vs TriangleList)
-- **Indexed TriangleList**: Best for complex meshes with vertex reuse
-- **TriangleList without indices**: Most flexible but highest memory usage
-
-**Vertex Cache Utilization:**
-- **Strip topologies** (LineStrip, TriangleStrip): Excellent (sequential access)
-- **List topologies** (LineList, TriangleList): Good with proper vertex ordering
-- **PointList**: N/A (no shared vertices)
+| PrimitiveType     | How vertices are consumed                         | Primitive count formula           | Typical uses                                  | Pros                                                    | Cons                                                       |
+|-------------------|----------------------------------------------------|-----------------------------------|-----------------------------------------------|---------------------------------------------------------|------------------------------------------------------------|
+| `LineList`        | Each **pair** makes 1 line                         | `vertexCount / 2`                 | Axes, debug rays, grids                        | Simple indexing; fully independent segments              | More vertices for continuous paths than `LineStrip`        |
+| `LineStrip`       | Each new vertex extends the strip by 1 line        | `vertexCount - 1`                 | Polylines, outlines, graph plots               | Fewer vertices for long paths                           | Hard to “split” or color per-segment without repeats       |
+| `TriangleList`    | Each **triple** makes 1 triangle                    | `vertexCount / 3`                 | Most meshes; quads (2 tris)                    | Flexible; easy to mix shapes; predictable winding        | Higher vertex duplication vs strips                        |
+| `TriangleStrip`   | First 3 make a tri; each new vertex adds another   | `vertexCount - 2`                 | Ribbons, long surfaces, terrain strips         | Very vertex-efficient for connected surfaces            | Winding flips; culling quirks; trickier to stitch strips   |
 
 ---
 
-## Advanced Concepts
+## Notes & Gotchas
 
-### Degenerate Triangles
+- **Culling:** Default MonoGame rasterizer state may cull faces based on winding. For learning visuals, `RasterizerState.CullNone` is friendly.
+- **Depth:** These examples draw at `Z=0` with the camera at `Z=+5..8`. Adjust to taste.
+- **Indexed drawing:** For large meshes, **prefer** `DrawUserIndexedPrimitives` (or `VertexBuffer`/`IndexBuffer`) to reuse vertices.
+- **Colors & interpolation:** In triangles, vertex colors interpolate across the surface (Gouraud-style with `BasicEffect`).
 
-When using TriangleStrip, you can "jump" between disconnected strips using **degenerate triangles** (triangles with zero area):
+---
+
+## Reflective Questions
+
+1. **Efficiency:** When would `TriangleStrip` be more efficient than `TriangleList`, and when would you **avoid** it?
+2. **Topology choice:** If you needed to draw a wireframe cube, which primitive type(s) would you choose and why?
+3. **Winding & culling:** What visual artifacts happen if face culling is enabled and your triangle winding doesn’t match the rasterizer setting?
+4. **Indexing:** How would you convert the `TriangleList` quad example to use **indexed primitives**? What changes in memory use?
+5. **Interpolation:** How do vertex colors behave across a triangle, and how could you use this to visualize normals or scalar fields?
+6. **3D placement:** Modify one example to place vertices off the XY plane (vary Z). How does that change what you see and why?
+
+---
+
+## Extension Tasks (Optional)
+
+- Replace `VertexPositionColor` with `VertexPositionTexture` and map a texture on the `TriangleList` quad (you’ll need `TextureEnabled = true` on `BasicEffect`).
+- Build a simple **grid** generator that outputs either `LineList` or `TriangleList` based on a toggle.
+- Render the same geometry with `VertexBuffer`/`IndexBuffer` objects and compare performance and code clarity.
+
+---
+
+### Quick Reference: Primitive Counts
 
 ```csharp
-// Creating two separate strips connected by degenerate triangles
-public static VertexPositionColor[] CreateMultipleStrips()
-{
-    List<VertexPositionColor> vertices = new List<VertexPositionColor>();
-    
-    // First strip (a quad)
-    vertices.Add(new VertexPositionColor(new Vector3(-2, 1, 0), Color.Red));
-    vertices.Add(new VertexPositionColor(new Vector3(-2, -1, 0), Color.Red));
-    vertices.Add(new VertexPositionColor(new Vector3(-1, 1, 0), Color.Red));
-    vertices.Add(new VertexPositionColor(new Vector3(-1, -1, 0), Color.Red));
-    
-    // Degenerate triangle (repeat last vertex of first strip)
-    vertices.Add(new VertexPositionColor(new Vector3(-1, -1, 0), Color.Red));
-    
-    // Degenerate triangle (repeat first vertex of next strip)
-    vertices.Add(new VertexPositionColor(new Vector3(1, 1, 0), Color.Blue));
-    
-    // Second strip (another quad)
-    vertices.Add(new VertexPositionColor(new Vector3(1, 1, 0), Color.Blue));
-    vertices.Add(new VertexPositionColor(new Vector3(1, -1, 0), Color.Blue));
-    vertices.Add(new VertexPositionColor(new Vector3(2, 1, 0), Color.Blue));
-    vertices.Add(new VertexPositionColor(new Vector3(2, -1, 0), Color.Blue));
-    
-    return vertices.ToArray();
-}
-
-// The two repeated vertices create triangles with zero area that aren't rendered
-// but allow the strip to "jump" to a new location
+int LineListCount(VertexPositionColor[] v)    => v.Length / 2;
+int LineStripCount(VertexPositionColor[] v)   => v.Length - 1;
+int TriangleListCount(VertexPositionColor[] v)=> v.Length / 3;
+int TriangleStripCount(VertexPositionColor[] v)=> v.Length - 2;
 ```
 
-### Indexed vs Non-Indexed Drawing
+---
+
+## Common Mistakes, Solutions, and Debugging
+
+Below are the **top pitfalls** when drawing with `DrawUserPrimitives<T>()`, with **failing code**, a **fix**, and **debug tips**.
+
+---
+
+### 1) Passing the **vertex count** instead of the **primitive count**
+
+**Symptom:** Nothing (or only part) renders; out-of-range or odd artifacts.
 
 ```csharp
-// Non-indexed drawing (DrawUserPrimitives)
-graphicsDevice.DrawUserPrimitives(
-    PrimitiveType.TriangleList,
-    vertices,
-    0,              // vertex offset
-    primitiveCount  // number of primitives
-);
+// ❌ Mistake: using vertex count as primitive count for LineList
+var verts = new VertexPositionColor[]
+{
+    new(new Vector3(-1, 0, 0), Color.Red),
+    new(new Vector3( 1, 0, 0), Color.Red),
+    new(new Vector3( 0,-1, 0), Color.Green),
+    new(new Vector3( 0, 1, 0), Color.Green)
+};
 
-// Indexed drawing (DrawIndexedPrimitives)
-graphicsDevice.SetVertexBuffer(vertexBuffer);
-graphicsDevice.Indices = indexBuffer;
-graphicsDevice.DrawIndexedPrimitives(
-    PrimitiveType.TriangleList,
-    0,              // base vertex (offset into vertex buffer)
-    0,              // min vertex index
-    primitiveCount  // number of primitives
-);
-
-// When to use indices:
-// - Vertex reuse is high (cubes, spheres, complex models)
-// - Model has many shared vertices
-// - Memory bandwidth is limited
-
-// When to skip indices:
-// - Simple, one-off geometry
-// - Strips where vertices are already optimally ordered
-// - Prototyping and debugging
+GraphicsDevice.DrawUserPrimitives(
+    PrimitiveType.LineList, verts, 0, verts.Length /* ❌ should be / 2 */);
 ```
 
-### RasterizerState and PrimitiveType
+```csharp
+// ✅ Fix: compute primitive count per topology
+int primitiveCount = verts.Length / 2; // LineList => 2 verts/line
+GraphicsDevice.DrawUserPrimitives(
+    PrimitiveType.LineList, verts, 0, primitiveCount);
+```
 
-Different PrimitiveTypes interact with RasterizerState settings:
+**Debug tips**
+- Print your counts: `Debug.WriteLine($"verts={verts.Length}, prims={primitiveCount}");`
+- Keep a tiny helper:
 
 ```csharp
-// Backface culling (only affects triangles)
-RasterizerState rsTriangles = new RasterizerState
+int PrimitiveCount(PrimitiveType t, int v) => t switch
 {
-    CullMode = CullMode.CullCounterClockwiseFace, // Default: CullClockwiseFace
-    FillMode = FillMode.Solid                      // or FillMode.WireFrame
-};
-
-// For lines and points, culling doesn't apply
-RasterizerState rsLines = new RasterizerState
-{
-    CullMode = CullMode.None  // Lines/points have no concept of facing
-};
-
-// Wireframe mode with TriangleList/Strip shows triangle edges
-graphicsDevice.RasterizerState = new RasterizerState
-{
-    FillMode = FillMode.WireFrame,
-    CullMode = CullMode.None
+    PrimitiveType.LineList     => v / 2,
+    PrimitiveType.LineStrip    => v - 1,
+    PrimitiveType.TriangleList => v / 3,
+    PrimitiveType.TriangleStrip=> v - 2,
+    _ => 0
 };
 ```
 
 ---
 
-## Common Mistakes and Debugging
+### 2) Using the **wrong PrimitiveType** (LineList vs LineStrip) or forgetting to **close a loop**
 
-### Mistake 1: Wrong Vertex Count
+**Symptom:** Gaps between segments, “broken” polylines, last segment missing.
 
 ```csharp
-// ERROR: TriangleList with 4 vertices (not divisible by 3)
-VertexPositionColor[] vertices = new VertexPositionColor[4];
-graphicsDevice.DrawUserPrimitives(
-    PrimitiveType.TriangleList,
-    vertices,
-    0,
-    4 / 3  // = 1.333... WILL CRASH OR RENDER INCORRECTLY
-);
-
-// CORRECT: Use 3 or 6 vertices, or use TriangleStrip
-graphicsDevice.DrawUserPrimitives(
-    PrimitiveType.TriangleStrip,
-    vertices,
-    0,
-    2  // 4 vertices - 2 = 2 triangles
-);
+// ❌ Mistake: expecting a connected polyline, but using LineList
+var verts = new[]
+{
+    V(-2,0), V(-1,1), V(0,-0.5f), V(1,1), V(2,0)
+};
+GraphicsDevice.DrawUserPrimitives(
+    PrimitiveType.LineList, verts, 0, verts.Length/2); // ❌
 ```
 
-### Mistake 2: Incorrect Primitive Count
-
 ```csharp
-// ERROR: Confusing vertex count with primitive count
-VertexPositionColor[] vertices = new VertexPositionColor[6];
-graphicsDevice.DrawUserPrimitives(
-    PrimitiveType.TriangleList,
-    vertices,
-    0,
-    6  // WRONG! This means 6 triangles = 18 vertices needed
-);
-
-// CORRECT: Primitive count for TriangleList = vertices / 3
-graphicsDevice.DrawUserPrimitives(
-    PrimitiveType.TriangleList,
-    vertices,
-    0,
-    2  // 6 vertices / 3 = 2 triangles
-);
+// ✅ Fix: use LineStrip for a continuous path
+GraphicsDevice.DrawUserPrimitives(
+    PrimitiveType.LineStrip, verts, 0, verts.Length - 1);
 ```
 
-### Mistake 3: Wrong Winding Order
-
+**Closing a loop (polygon outline):**
 ```csharp
-// This triangle won't appear with default culling!
-VertexPositionColor[] backwardTriangle = new VertexPositionColor[]
-{
-    new VertexPositionColor(new Vector3(0, 1, 0), Color.Red),
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.Green),  // Clockwise!
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.Blue)
-};
+// ❌ Mistake: trying to close the shape without repeating the first vertex
+var poly = new[] { V(-1,-1), V(1,-1), V(1,1), V(-1,1) };
+GraphicsDevice.DrawUserPrimitives(
+    PrimitiveType.LineStrip, poly, 0, poly.Length - 1); // ❌ open
 
-// SOLUTION 1: Reverse vertex order
-VertexPositionColor[] correctTriangle = new VertexPositionColor[]
-{
-    new VertexPositionColor(new Vector3(0, 1, 0), Color.Red),
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.Blue),    // CCW
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.Green)
-};
-
-// SOLUTION 2: Disable culling (performance cost)
-graphicsDevice.RasterizerState = new RasterizerState
-{
-    CullMode = CullMode.None
-};
+// ✅ Fix: repeat the first vertex at the end
+var closed = new[] { V(-1,-1), V(1,-1), V(1,1), V(-1,1), V(-1,-1) };
+GraphicsDevice.DrawUserPrimitives(
+    PrimitiveType.LineStrip, closed, 0, closed.Length - 1);
 ```
 
-### Mistake 4: TriangleStrip Vertex Ordering
+**Debug tips**
+- Temporarily draw **markers** (e.g., small quads/points) at vertices with distinct colors to visualize order.
+- Log vertex order: index and position.
+
+---
+
+### 3) **Back-face culling** or **winding order** hides your triangles
+
+**Symptom:** Triangles appear/disappear when you move the camera or rotate; one side visible, the other not.
 
 ```csharp
-// INCORRECT: Trying to make a quad with TriangleStrip
-VertexPositionColor[] wrongStrip = new VertexPositionColor[]
+// ❌ Mistake: vertices wound opposite to rasterizer expectations (default culling on)
+var tri = new[]
 {
-    new VertexPositionColor(new Vector3(-1, 1, 0), Color.White),   // Top-left
-    new VertexPositionColor(new Vector3(1, 1, 0), Color.White),    // Top-right
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.White),  // Bottom-left
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.White)    // Bottom-right
+    new VertexPositionColor(new Vector3(-1, -1, 0), Color.Red),
+    new VertexPositionColor(new Vector3( 1, -1, 0), Color.Green),
+    new VertexPositionColor(new Vector3( 0,  1, 0), Color.Blue),
 };
-// This creates a bowtie/twisted shape!
-
-// CORRECT: Zig-zag pattern
-VertexPositionColor[] correctStrip = new VertexPositionColor[]
+foreach (var pass in _effect.CurrentTechnique.Passes)
 {
-    new VertexPositionColor(new Vector3(-1, 1, 0), Color.White),   // Top-left
-    new VertexPositionColor(new Vector3(-1, -1, 0), Color.White),  // Bottom-left
-    new VertexPositionColor(new Vector3(1, 1, 0), Color.White),    // Top-right
-    new VertexPositionColor(new Vector3(1, -1, 0), Color.White)    // Bottom-right
+    pass.Apply();
+    // With default RasterizerState, this might be culled depending on winding
+    GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, tri, 0, 1);
+}
+```
+
+```csharp
+// ✅ Fix option A: disable culling while learning
+GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+// ✅ Fix option B: ensure consistent winding (e.g., counter-clockwise facing camera)
+var triCCW = new[]
+{
+    new VertexPositionColor(new Vector3(-1, -1, 0), Color.Red),
+    new VertexPositionColor(new Vector3( 0,  1, 0), Color.Blue),
+    new VertexPositionColor(new Vector3( 1, -1, 0), Color.Green),
 };
 ```
 
-### Debugging Visualization Helper
+**Debug tips**
+- Spin the camera or triangle; if it “pops”, it’s culling/winding.
+- While prototyping, use `CullNone`. Re-enable proper culling once your winding is verified.
+
+---
+
+### 4) Forgetting `pass.Apply()` before the draw call
+
+**Symptom:** Completely blank frame even though buffers and counts are correct.
 
 ```csharp
-public class PrimitiveTypeDebugger
+// ❌ Mistake: no pass.Apply() before draw
+GraphicsDevice.Clear(Color.Black);
+int prims = verts.Length / 2;
+// GraphicsDevice.DrawUserPrimitives(...) // ❌ no effect state bound
+```
+
+```csharp
+// ✅ Fix: always apply the current pass right before drawing
+GraphicsDevice.Clear(Color.Black);
+
+foreach (var pass in _effect.CurrentTechnique.Passes)
 {
-    public static void VisualizeTopology(
-        GraphicsDevice device,
-        VertexPositionColor[] vertices,
-        PrimitiveType type)
+    pass.Apply(); // ✅ bind shader state
+    GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, verts, 0, prims);
+}
+```
+
+**Debug tips**
+- Put a small guard utility:
+
+```csharp
+void DrawWithEffect<T>(PrimitiveType type, T[] data, int offset, int prims) where T : struct, IVertexType
+{
+    foreach (var pass in _effect.CurrentTechnique.Passes)
     {
-        // Draw the actual primitive
-        device.DrawUserPrimitives(type, vertices, 0, 
-            GetPrimitiveCount(vertices.Length, type));
-        
-        // Overlay with points showing vertex positions
-        device.DrawUserPrimitives(
-            PrimitiveType.PointList, vertices, 0, vertices.Length);
-        
-        // Overlay with line strip showing vertex order
-        device.DrawUserPrimitives(
-            PrimitiveType.LineStrip, vertices, 0, vertices.Length - 1);
-    }
-    
-    private static int GetPrimitiveCount(int vertexCount, PrimitiveType type)
-    {
-        return type switch
-        {
-            PrimitiveType.PointList => vertexCount,
-            PrimitiveType.LineList => vertexCount / 2,
-            PrimitiveType.LineStrip => vertexCount - 1,
-            PrimitiveType.TriangleList => vertexCount / 3,
-            PrimitiveType.TriangleStrip => vertexCount - 2,
-            _ => 0
-        };
+        pass.Apply();
+        GraphicsDevice.DrawUserPrimitives(type, data, offset, prims);
     }
 }
+```
+
+---
+
+### 5) Effect/state not matching vertex data or camera setup
+
+**Symptom:** Geometry draws black/invisible or is clipped.
+
+**Case A – Colors not showing (VertexColorEnabled off):**
+```csharp
+// ❌ Mistake: using VertexPositionColor but not enabling per-vertex color
+_effect = new BasicEffect(GraphicsDevice)
+{
+    // VertexColorEnabled = false; // ❌ default -> colors ignored, appears black
+    World = Matrix.Identity,
+    View = Matrix.CreateLookAt(new Vector3(0,0,5), Vector3.Zero, Vector3.Up),
+    Projection = Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver4,
+        GraphicsDevice.Viewport.AspectRatio, 0.1f, 100f)
+};
+
+// ✅ Fix:
+_effect.VertexColorEnabled = true;
+```
+
+**Case B – Clipping due to bad near/far planes or camera inside geometry:**
+```csharp
+// ❌ Mistake: near plane too large, or camera placed at the mesh center
+_effect.Projection = Matrix.CreatePerspectiveFieldOfView(
+    MathHelper.PiOver4, aspect, 1.0f, 2.0f); // ❌ super narrow depth range
+_effect.View = Matrix.CreateLookAt(new Vector3(0,0,0), Vector3.Zero, Vector3.Up); // ❌ eye=target
+
+// ✅ Fix: sensible camera & depth range
+_effect.View = Matrix.CreateLookAt(new Vector3(0,0,6f), Vector3.Zero, Vector3.Up);
+_effect.Projection = Matrix.CreatePerspectiveFieldOfView(
+    MathHelper.PiOver4, aspect, 0.1f, 100f);
+```
+
+**Debug tips**
+- Draw a **unit axis** or grid near the origin to confirm your camera and scale.
+- Log matrices and key distances: eye position, target, near/far, object bounds.
+
+---
+
+### Tiny Utility: Quick Vertex Helper
+
+```csharp
+// Handy for building colored vertices in examples
+static VertexPositionColor V(float x, float y, float z = 0, Color? c = null)
+    => new VertexPositionColor(new Vector3(x, y, z), c ?? Color.White);
 ```
 
 ---
