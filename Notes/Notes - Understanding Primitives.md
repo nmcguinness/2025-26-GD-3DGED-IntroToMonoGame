@@ -728,12 +728,3 @@ Understanding **PrimitiveType** is fundamental to 3D graphics programming. Key t
 
 As you develop your game engine, you'll use PrimitiveType constantly. Mastering it now will help you debug rendering issues, optimize performance, and understand how commercial engines work under the hood.
 
----
-
-## Additional Resources
-
-- **MonoGame Documentation**: [Graphics and Shaders](https://docs.monogame.net/articles/getting_started/5_adding_basic_code.html)
-- **Real-Time Rendering (4th Edition)**: Chapter 3 - The Graphics Processing Unit
-- **DirectX Documentation**: [Primitive Topologies](https://docs.microsoft.com/en-us/windows/win32/direct3d11/d3d10-graphics-programming-guide-primitive-topologies)
-- **OpenGL Tutorial**: [Drawing Primitives](https://www.khronos.org/opengl/wiki/Primitive)
-- **Game Engine Architecture (3rd Edition)**: Chapter 10 - The Rendering Engine
