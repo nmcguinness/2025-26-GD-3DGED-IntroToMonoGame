@@ -70,12 +70,12 @@ using Microsoft.Xna.Framework.Input;
 
 namespace PrimitiveTypesLesson
 {
-    public class Game1 : Game
+    public class Main : Game
     {
         private GraphicsDeviceManager _graphics;
         private BasicEffect _effect;
 
-        public Game1()
+        public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -122,23 +122,23 @@ Each specific primitive type adds vertex data and a `Draw()` implementation.
 - Vertices required = `2 * lineCount`
 - Primitive count for draw call = `vertices.Length / 2`
 
-### Complete Example (drop-in Game1)
+### Complete Example (drop-in Main)
 
 ```csharp
-// File: Game1.cs
+// File: Main.cs
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace PrimitiveTypesLesson
 {
-    public class Game1 : Game
+    public class Main : Game
     {
         private GraphicsDeviceManager _graphics;
         private BasicEffect _effect;
         private VertexPositionColor[] _verts;
 
-        public Game1()
+        public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -205,20 +205,20 @@ namespace PrimitiveTypesLesson
 ### Complete Example
 
 ```csharp
-// File: Game1.cs
+// File: Main.cs
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace PrimitiveTypesLesson
 {
-    public class Game1 : Game
+    public class Main : Game
     {
         private GraphicsDeviceManager _graphics;
         private BasicEffect _effect;
         private VertexPositionColor[] _verts;
 
-        public Game1()
+        public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -286,20 +286,20 @@ namespace PrimitiveTypesLesson
 ### Complete Example
 
 ```csharp
-// File: Game1.cs
+// File: Main.cs
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace PrimitiveTypesLesson
 {
-    public class Game1 : Game
+    public class Main : Game
     {
         private GraphicsDeviceManager _graphics;
         private BasicEffect _effect;
         private VertexPositionColor[] _verts;
 
-        public Game1()
+        public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
@@ -373,20 +373,20 @@ namespace PrimitiveTypesLesson
 ### Complete Example
 
 ```csharp
-// File: Game1.cs
+// File: Main.cs
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace PrimitiveTypesLesson
 {
-    public class Game1 : Game
+    public class Main : Game
     {
         private GraphicsDeviceManager _graphics;
         private BasicEffect _effect;
         private VertexPositionColor[] _verts;
 
-        public Game1()
+        public Main()
         {
             _graphics = new GraphicsDeviceManager(this);
             Content.RootDirectory = "Content";
