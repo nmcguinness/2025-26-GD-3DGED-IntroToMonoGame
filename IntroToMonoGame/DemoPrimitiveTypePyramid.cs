@@ -40,12 +40,42 @@ namespace IntroToMonoGame
             _verts[9] = new VertexPositionColor(
                new Vector3(0.5f, 0, 0.5f), Color.Yellow);
 
+            //line 6s-6e - back right
+            _verts[10] = new VertexPositionColor(
+                new Vector3(0, 1, 0), Color.Red);
+            _verts[11] = new VertexPositionColor(
+               new Vector3(0.5f, 0, -0.5f), Color.Yellow);
 
+            //line 7s-7e - back left
+            _verts[12] = new VertexPositionColor(
+                new Vector3(0, 1, 0), Color.Red);
+            _verts[13] = new VertexPositionColor(
+               new Vector3(-0.5f, 0, -0.5f), Color.Yellow);
+
+            //line 8s-8e - front left
+            _verts[14] = new VertexPositionColor(
+                new Vector3(0, 1, 0), Color.Red);
+            _verts[15] = new VertexPositionColor(
+               new Vector3(-0.5f, 0, 0.5f), Color.Yellow);
         }
 
-        public void Draw(GameTime gameTime)
+        public void Draw(GameTime gameTime,
+            BasicEffect effect, Matrix world,
+            Matrix view, Matrix projection, 
+            GraphicsDevice graphics)
         {
+            effect.World = world;
+            effect.View = view;
+            effect.Projection = projection;
 
+            foreach (var pass in effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                graphics.DrawUserPrimitives(
+                    PrimitiveType.LineList, 
+                    _verts, 
+                   0, 8);
+            }
         }
     }
 }
