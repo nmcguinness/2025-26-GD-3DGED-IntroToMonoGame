@@ -683,33 +683,19 @@ Consider these questions to deepen your understanding:
 
 1. **Conceptual Understanding**
    - Why does the GPU need to know PrimitiveType? Can't it infer it from the data?
-   - How does PrimitiveType relate to the concept of topology in mathematics?
    - What would happen if you used the wrong primitive count with a PrimitiveType?
 
 2. **Performance Analysis**
    - Why is TriangleStrip more memory-efficient than TriangleList for strips, but not for arbitrary meshes?
    - When would LineList be preferred over LineStrip despite using more memory?
-   - How does vertex cache optimization differ between List and Strip topologies?
 
 3. **Practical Application**
    - How would you choose a PrimitiveType for: a particle system, terrain mesh, debug bounding box, skybox, grass blades?
    - What PrimitiveType would be best for rendering a procedural lightning bolt effect?
-   - How could you use degenerate triangles to render a multi-island terrain in one draw call?
 
 4. **Architectural Decisions**
-   - Should your game engine abstract PrimitiveType from gameplay programmers?
-   - How might you design a "Mesh" class that automatically chooses optimal PrimitiveType?
-   - What trade-offs exist between engine flexibility and enforcing best practices?
-
-5. **Debugging Scenarios**
-   - Your cube renders as 4 separate triangles floating in space. What PrimitiveType issue might cause this?
-   - A quad appears as two triangles forming an hourglass shape. What's likely wrong?
-   - Your LineList grid renders as disconnected segments. Should you use LineStrip instead? Why or why not?
-
-6. **Extension Thinking**
-   - Modern APIs have PrimitiveType options like TriangleFan and Patches. What might these be used for?
-   - How would you implement a custom "QuadList" type that renders quads without triangulation?
-   - What role does PrimitiveType play in geometry shaders and tessellation?
+   - Where should the choice of PrimitiveType live? In the data, or in the draw code? What are the pros/cons for readability and reuse?
+   - Where should we check that the vertex count is valid (e.g., LineList requires an even count)? Constructor guard, a Validate() method, or a small utility?
 
 ---
 
