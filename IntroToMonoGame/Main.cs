@@ -20,6 +20,7 @@ namespace IntroToMonoGame
         private Matrix _view;        // World space → View space (camera transform)
         private Matrix _projection;  // View space → Clip space (perspective)
         private BasicEffect _effect; // Fixed-function style shader that understands our W/V/P and vertex colors
+        private DemoPrimitiveTypePyramid _pyramidPrimitive;
 
         #endregion
 
@@ -57,6 +58,10 @@ namespace IntroToMonoGame
                 // Lighting is off by default; not needed for unlit colored lines.
             };
 
+            _pyramidPrimitive =
+                new DemoPrimitiveTypePyramid();
+            _pyramidPrimitive.InitializeVerts();
+
             base.Initialize();
         }
 
@@ -71,6 +76,15 @@ namespace IntroToMonoGame
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.CornflowerBlue);
+
+            _pyramidPrimitive.Draw(gameTime,
+                _effect,
+                Matrix.Identity,
+                _view,
+                _projection,
+                GraphicsDevice);
+
+
             base.Draw(gameTime);
         }
     }
