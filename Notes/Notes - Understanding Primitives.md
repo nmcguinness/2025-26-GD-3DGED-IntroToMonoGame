@@ -68,7 +68,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace PrimitiveTypesLesson
+namespace IntroToMonoGame
 {
     public class Main : Game
     {
@@ -130,7 +130,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace PrimitiveTypesLesson
+namespace IntroToMonoGame
 {
     public class Main : Game
     {
@@ -210,7 +210,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace PrimitiveTypesLesson
+namespace IntroToMonoGame
 {
     public class Main : Game
     {
@@ -291,7 +291,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace PrimitiveTypesLesson
+namespace IntroToMonoGame
 {
     public class Main : Game
     {
@@ -378,7 +378,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
-namespace PrimitiveTypesLesson
+namespace IntroToMonoGame
 {
     public class Main : Game
     {
