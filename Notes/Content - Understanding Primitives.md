@@ -42,16 +42,6 @@ public enum PrimitiveType
 
 Each type interprets vertex buffers differently, affecting how geometry is assembled and rendered.
 
----
-
-# MonoGame Primitive Types (LineList, LineStrip, TriangleList, TriangleStrip)
-
-> A practical, code-first lesson in drawing basic geometry with `GraphicsDevice.DrawUserPrimitives<T>()` in MonoGame (C#).
-
----
-
-## Overview
-
 MonoGame’s `PrimitiveType` tells the GPU **how to interpret a sequence of vertices**. The same vertex list can be connected in different ways to produce lines or triangles:
 
 - `LineList` – independent line segments (2 vertices per line).
@@ -69,7 +59,7 @@ All examples below use:
 
 ---
 
-## Common Setup (shared concepts)
+## Common Setup 
 
 You’ll see these pieces repeated in each complete example:
 
@@ -475,41 +465,9 @@ namespace PrimitiveTypesLesson
 
 ---
 
-## Reflective Questions
-
-1. **Efficiency:** When would `TriangleStrip` be more efficient than `TriangleList`, and when would you **avoid** it?
-2. **Topology choice:** If you needed to draw a wireframe cube, which primitive type(s) would you choose and why?
-3. **Winding & culling:** What visual artifacts happen if face culling is enabled and your triangle winding doesn’t match the rasterizer setting?
-4. **Indexing:** How would you convert the `TriangleList` quad example to use **indexed primitives**? What changes in memory use?
-5. **Interpolation:** How do vertex colors behave across a triangle, and how could you use this to visualize normals or scalar fields?
-6. **3D placement:** Modify one example to place vertices off the XY plane (vary Z). How does that change what you see and why?
-
----
-
-## Extension Tasks (Optional)
-
-- Replace `VertexPositionColor` with `VertexPositionTexture` and map a texture on the `TriangleList` quad (you’ll need `TextureEnabled = true` on `BasicEffect`).
-- Build a simple **grid** generator that outputs either `LineList` or `TriangleList` based on a toggle.
-- Render the same geometry with `VertexBuffer`/`IndexBuffer` objects and compare performance and code clarity.
-
----
-
-### Quick Reference: Primitive Counts
-
-```csharp
-int LineListCount(VertexPositionColor[] v)    => v.Length / 2;
-int LineStripCount(VertexPositionColor[] v)   => v.Length - 1;
-int TriangleListCount(VertexPositionColor[] v)=> v.Length / 3;
-int TriangleStripCount(VertexPositionColor[] v)=> v.Length - 2;
-```
-
----
-
 ## Common Mistakes, Solutions, and Debugging
 
 Below are the **top pitfalls** when drawing with `DrawUserPrimitives<T>()`, with **failing code**, a **fix**, and **debug tips**.
-
----
 
 ### 1) Passing the **vertex count** instead of the **primitive count**
 
@@ -551,8 +509,6 @@ int PrimitiveCount(PrimitiveType t, int v) => t switch
 };
 ```
 
----
-
 ### 2) Using the **wrong PrimitiveType** (LineList vs LineStrip) or forgetting to **close a loop**
 
 **Symptom:** Gaps between segments, “broken” polylines, last segment missing.
@@ -589,8 +545,6 @@ GraphicsDevice.DrawUserPrimitives(
 **Debug tips**
 - Temporarily draw **markers** (e.g., small quads/points) at vertices with distinct colors to visualize order.
 - Log vertex order: index and position.
-
----
 
 ### 3) **Back-face culling** or **winding order** hides your triangles
 
@@ -629,8 +583,6 @@ var triCCW = new[]
 - Spin the camera or triangle; if it “pops”, it’s culling/winding.
 - While prototyping, use `CullNone`. Re-enable proper culling once your winding is verified.
 
----
-
 ### 4) Forgetting `pass.Apply()` before the draw call
 
 **Symptom:** Completely blank frame even though buffers and counts are correct.
@@ -666,8 +618,6 @@ void DrawWithEffect<T>(PrimitiveType type, T[] data, int offset, int prims) wher
     }
 }
 ```
-
----
 
 ### 5) Effect/state not matching vertex data or camera setup
 
@@ -708,12 +658,21 @@ _effect.Projection = Matrix.CreatePerspectiveFieldOfView(
 
 ---
 
-### Tiny Utility: Quick Vertex Helper
+### Quick Reference: Primitive Count Helper
 
 ```csharp
-// Handy for building colored vertices in examples
-static VertexPositionColor V(float x, float y, float z = 0, Color? c = null)
-    => new VertexPositionColor(new Vector3(x, y, z), c ?? Color.White);
+private static int GetPrimitiveCount(int vertexCount, PrimitiveType type)
+{
+    return type switch
+    {
+        PrimitiveType.PointList => vertexCount,
+        PrimitiveType.LineList => vertexCount / 2,
+        PrimitiveType.LineStrip => vertexCount - 1,
+        PrimitiveType.TriangleList => vertexCount / 3,
+        PrimitiveType.TriangleStrip => vertexCount - 2,
+        _ => 0
+    };
+}
 ```
 
 ---
