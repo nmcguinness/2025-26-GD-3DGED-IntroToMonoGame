@@ -22,8 +22,9 @@ namespace IntroToMonoGame
         private Matrix _projection;  // View space → Clip space (perspective)
         private BasicEffect _effect; // Fixed-function style shader that understands our W/V/P and vertex colors
         private DemoPrimitiveTypePyramid _pyramidPrimitive;
-        private int yRot;
+        private float yRot;
         private float xRot;
+        private DemoPrimitiveTypeRect _rectPrimitive;
 
         #endregion
 
@@ -65,6 +66,10 @@ namespace IntroToMonoGame
                 new DemoPrimitiveTypePyramid();
             _pyramidPrimitive.InitializeVerts();
 
+            _rectPrimitive =
+             new DemoPrimitiveTypeRect();
+            _rectPrimitive.InitializeVerts();
+
             base.Initialize();
         }
 
@@ -79,11 +84,13 @@ namespace IntroToMonoGame
                 yRot += 1;
             else if (kbState.IsKeyDown(Keys.D))
                 yRot -= 1;
-            
             if (kbState.IsKeyDown(Keys.W))
                 xRot += 1;
             else if (kbState.IsKeyDown(Keys.S))
                 xRot -= 1;
+
+            MouseState msState = Mouse.GetState();
+            xRot = msState.ScrollWheelValue / 100f;
 
             base.Update(gameTime);
         }
@@ -96,6 +103,13 @@ namespace IntroToMonoGame
                 Matrix.Identity 
                 * Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
                 * Matrix.CreateRotationY(MathHelper.ToRadians(yRot)),
+                _view,
+                _projection,
+                GraphicsDevice);
+
+            _rectPrimitive.Draw(gameTime,
+                _effect,
+                Matrix.Identity,
                 _view,
                 _projection,
                 GraphicsDevice);

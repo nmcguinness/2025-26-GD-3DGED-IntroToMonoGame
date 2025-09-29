@@ -10,6 +10,10 @@ namespace IntroToMonoGame
         {
             _verts = new VertexPositionColor[16];
            
+            //how big is a vertexpositioncolor entry?
+             // position - 3 x 4 bytes (float) = 12 bytes
+             // color - 3 x 4 bytes (float) = 12 bytes
+
             //line 1s-1e - base front
             _verts[0] = new VertexPositionColor(
                 new Vector3(-0.5f, 0, 0.5f), Color.Yellow);
@@ -36,25 +40,25 @@ namespace IntroToMonoGame
 
             //line 5s-5e - front right
             _verts[8] = new VertexPositionColor(
-                new Vector3(0, 1, 0), Color.Red);
+                new Vector3(0, 0.5f, 0), Color.Red);
             _verts[9] = new VertexPositionColor(
                new Vector3(0.5f, 0, 0.5f), Color.Yellow);
 
             //line 6s-6e - back right
             _verts[10] = new VertexPositionColor(
-                new Vector3(0, 1, 0), Color.Red);
+                new Vector3(0, 0.5f, 0), Color.Red);
             _verts[11] = new VertexPositionColor(
                new Vector3(0.5f, 0, -0.5f), Color.Yellow);
 
             //line 7s-7e - back left
             _verts[12] = new VertexPositionColor(
-                new Vector3(0, 1, 0), Color.Red);
+                new Vector3(0, 0.5f, 0), Color.Red);
             _verts[13] = new VertexPositionColor(
                new Vector3(-0.5f, 0, -0.5f), Color.Yellow);
 
             //line 8s-8e - front left
             _verts[14] = new VertexPositionColor(
-                new Vector3(0, 1, 0), Color.Red);
+                new Vector3(0, 0.5f, 0), Color.Red);
             _verts[15] = new VertexPositionColor(
                new Vector3(-0.5f, 0, 0.5f), Color.Yellow);
         }
