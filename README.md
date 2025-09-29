@@ -9,7 +9,7 @@ The module descriptor can be viewed [here](https://courses.dkit.ie/index.cfm/pag
 
 ## Module Notes 
 
-- [PrimitiveType in 3D Graphics in MonoGame](Notes/Content%20-%20Understanding%20Primitives.md)
+- [PrimitiveType in 3D Graphics in MonoGame](Notes/Notes%20-%20Understanding%20Primitives.md)
 	- [Exercises - Understanding PrimitiveType](Exercises/Exercises%20-%20Understanding%20Primitives)
 
 ## Recommended Reading 
