@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace IntroToMonoGame
 {
-    public class DemoPrimitiveTypePyramid
+    public class DemoVPC_LL_Pyramid
     {
         private VertexPositionColor[] _verts;
         public void InitializeVerts()

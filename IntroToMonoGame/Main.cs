@@ -20,11 +20,12 @@ namespace IntroToMonoGame
         private Matrix _world;       // Model space → World space (Scale/Rotate/Translate)
         private Matrix _view;        // World space → View space (camera transform)
         private Matrix _projection;  // View space → Clip space (perspective)
-        private BasicEffect _effect; // Fixed-function style shader that understands our W/V/P and vertex colors
-        private DemoPrimitiveTypePyramid _pyramidPrimitive;
+        private BasicEffect _unlitEffect; // Fixed-function style shader that understands our W/V/P and vertex colors
+        private DemoVPC_LL_Pyramid _pyramidPrimitive;
         private float yRot;
         private float xRot;
         private DemoPrimitiveTypeRect _rectPrimitive;
+        private DemoVPC_TL_Triangle _litTrianglePrimitive;
 
         #endregion
 
@@ -56,19 +57,26 @@ namespace IntroToMonoGame
                 MathHelper.PiOver2, 16f / 9f, 0.1f, 1000f);
 
             // --- Effect: tells the GPU how to transform and shade our vertices ---
-            _effect = new BasicEffect(GraphicsDevice)
+            _unlitEffect = new BasicEffect(GraphicsDevice)
             {
                 VertexColorEnabled = true, // use per-vertex Color in VertexPositionColor
                 // Lighting is off by default; not needed for unlit colored lines.
+                //LightingEnabled = true
             };
 
+           
+
             _pyramidPrimitive =
-                new DemoPrimitiveTypePyramid();
+                new DemoVPC_LL_Pyramid();
             _pyramidPrimitive.InitializeVerts();
 
             _rectPrimitive =
              new DemoPrimitiveTypeRect();
             _rectPrimitive.InitializeVerts();
+
+            _litTrianglePrimitive
+                = new DemoVPC_TL_Triangle();
+            _litTrianglePrimitive.InitializeVerts();
 
             base.Initialize();
         }
@@ -99,7 +107,7 @@ namespace IntroToMonoGame
             GraphicsDevice.Clear(Color.Black);
 
             _pyramidPrimitive.Draw(gameTime,
-                _effect,
+                _unlitEffect,
                 Matrix.Identity 
                 * Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
                 * Matrix.CreateRotationY(MathHelper.ToRadians(yRot)),
@@ -108,11 +116,18 @@ namespace IntroToMonoGame
                 GraphicsDevice);
 
             _rectPrimitive.Draw(gameTime,
-                _effect,
+                _unlitEffect,
                 Matrix.Identity,
                 _view,
                 _projection,
                 GraphicsDevice);
+
+            _litTrianglePrimitive.Draw(gameTime,
+               _unlitEffect,
+               Matrix.Identity,
+               _view,
+               _projection,
+               GraphicsDevice);
 
 
             base.Draw(gameTime);
