@@ -146,7 +146,7 @@ namespace IntroToMonoGame
 
             _litCubePrimitive.Draw(gameTime,
                 _litEffect,
-                Matrix.Identity,
+                Matrix.Identity * Matrix.CreateRotationY(MathHelper.ToRadians(yRot)),
                 _view,
                 _projection,
                 GraphicsDevice);
