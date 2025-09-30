@@ -51,7 +51,7 @@ namespace IntroToMonoGame
 
             // --- View (camera) ---
             // Camera positioned at (0,0,10), looking at the origin, with "up" as +Y
-            _view = Matrix.CreateLookAt(new Vector3(0, 0, 1), Vector3.Zero, Vector3.UnitY);
+            _view = Matrix.CreateLookAt(new Vector3(0, 0, 2), Vector3.Zero, Vector3.UnitY);
 
             // --- Projection (lens) ---
             // FOV = 90° (Pi/2), aspect ratio = 16:9, near=1, far=1000
@@ -86,8 +86,9 @@ namespace IntroToMonoGame
             _litTrianglePrimitive.InitializeVerts();
 
             //first lit object!!!
+            var litCubeTexture = Content.Load<Texture2D>("mona_lisa");
             _litCubePrimitive
-                = new DemoVPNT_TL_Cube_Lit();
+                = new DemoVPNT_TL_Cube_Lit(litCubeTexture);
             _litCubePrimitive.InitializeVert();
 
             base.Initialize();
@@ -116,30 +117,30 @@ namespace IntroToMonoGame
         }
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.Black);
+            GraphicsDevice.Clear(Color.Gray);
 
-            _pyramidPrimitive.Draw(gameTime,
-                _unlitEffect,
-                Matrix.Identity 
-                * Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
-                * Matrix.CreateRotationY(MathHelper.ToRadians(yRot)),
-                _view,
-                _projection,
-                GraphicsDevice);
+            //_pyramidPrimitive.Draw(gameTime,
+            //    _unlitEffect,
+            //    Matrix.Identity 
+            //    * Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
+            //    * Matrix.CreateRotationY(MathHelper.ToRadians(yRot)),
+            //    _view,
+            //    _projection,
+            //    GraphicsDevice);
 
-            _rectPrimitive.Draw(gameTime,
-                _unlitEffect,
-                Matrix.Identity,
-                _view,
-                _projection,
-                GraphicsDevice);
+            //_rectPrimitive.Draw(gameTime,
+            //    _unlitEffect,
+            //    Matrix.Identity,
+            //    _view,
+            //    _projection,
+            //    GraphicsDevice);
 
-            _litTrianglePrimitive.Draw(gameTime,
-               _unlitEffect,
-               Matrix.Identity,
-               _view,
-               _projection,
-               GraphicsDevice);
+            //_litTrianglePrimitive.Draw(gameTime,
+            //   _unlitEffect,
+            //   Matrix.Identity,
+            //   _view,
+            //   _projection,
+            //   GraphicsDevice);
 
             _litCubePrimitive.Draw(gameTime,
                 _litEffect,
