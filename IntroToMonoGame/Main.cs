@@ -21,11 +21,13 @@ namespace IntroToMonoGame
         private Matrix _view;        // World space → View space (camera transform)
         private Matrix _projection;  // View space → Clip space (perspective)
         private BasicEffect _unlitEffect; // Fixed-function style shader that understands our W/V/P and vertex colors
+        private BasicEffect _litEffect;
         private DemoVPC_LL_Pyramid _pyramidPrimitive;
         private float yRot;
         private float xRot;
         private DemoPrimitiveTypeRect _rectPrimitive;
         private DemoVPC_TL_Triangle _litTrianglePrimitive;
+        private DemoVPNT_TL_Cube_Lit _litCubePrimitive;
 
         #endregion
 
@@ -64,8 +66,13 @@ namespace IntroToMonoGame
                 //LightingEnabled = true
             };
 
-           
-
+            _litEffect = new BasicEffect(GraphicsDevice)
+            {
+                TextureEnabled = true,
+                LightingEnabled = true,
+                PreferPerPixelLighting = true            
+            };
+            
             _pyramidPrimitive =
                 new DemoVPC_LL_Pyramid();
             _pyramidPrimitive.InitializeVerts();
@@ -77,6 +84,11 @@ namespace IntroToMonoGame
             _litTrianglePrimitive
                 = new DemoVPC_TL_Triangle();
             _litTrianglePrimitive.InitializeVerts();
+
+            //first lit object!!!
+            _litCubePrimitive
+                = new DemoVPNT_TL_Cube_Lit();
+            _litCubePrimitive.InitializeVert();
 
             base.Initialize();
         }
@@ -129,6 +141,12 @@ namespace IntroToMonoGame
                _projection,
                GraphicsDevice);
 
+            _litCubePrimitive.Draw(gameTime,
+                _litEffect,
+                Matrix.Identity,
+                _view,
+                _projection,
+                GraphicsDevice);
             
             base.Draw(gameTime);
         }
