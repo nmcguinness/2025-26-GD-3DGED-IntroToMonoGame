@@ -28,6 +28,7 @@ namespace IntroToMonoGame
             effect.View = view;
             effect.Projection = projection;
 
+            
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
