@@ -15,6 +15,10 @@ namespace IntroToMonoGame
                 //front-top-left
                 new VertexPositionNormalTexture(
                    new Vector3(-hL, hL, hL), Vector3.UnitZ, new Vector2(0,0)), //1
+                 new VertexPositionNormalTexture(
+                   new Vector3(hL, hL, hL), Vector3.UnitZ, new Vector2(1,0)), //2
+                  new VertexPositionNormalTexture(
+                   new Vector3(-hL, -hL, hL), Vector3.UnitZ, new Vector2(0,1)), //4
 
             };
 
@@ -33,7 +37,7 @@ namespace IntroToMonoGame
                 graphics.DrawUserPrimitives(
                     PrimitiveType.TriangleList, //all separate triangles
                     _verts,
-                   0, 12); //cube = 6 sides = 2x6 triangles
+                   0, 1); //cube = 6 sides = 2x6 triangles
             }
         }
     }
