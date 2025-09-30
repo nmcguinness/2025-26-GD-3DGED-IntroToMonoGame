@@ -72,6 +72,8 @@ namespace IntroToMonoGame
                 LightingEnabled = true,
                 PreferPerPixelLighting = true            
             };
+
+            _litEffect.EnableDefaultLighting();
             
             _pyramidPrimitive =
                 new DemoVPC_LL_Pyramid();

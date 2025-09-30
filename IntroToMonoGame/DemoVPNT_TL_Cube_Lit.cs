@@ -36,7 +36,7 @@ namespace IntroToMonoGame
             effect.View = view;
             effect.Projection = projection;
             effect.Texture = _texture;
-          //  effect.TextureEnabled = true;
+            effect.TextureEnabled = true;
 
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
