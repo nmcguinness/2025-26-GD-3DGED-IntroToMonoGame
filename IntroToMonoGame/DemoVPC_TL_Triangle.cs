@@ -6,7 +6,7 @@ namespace IntroToMonoGame
     public class DemoVPC_TL_Triangle
     {
         private VertexPositionColor[] _verts;
-        public void InitializeVerts()
+        public void Initialize()
         {
             _verts = new VertexPositionColor[5];
 

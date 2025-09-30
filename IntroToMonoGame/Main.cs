@@ -17,18 +17,18 @@ namespace IntroToMonoGame
         private SpriteBatch _spriteBatch;
 
         // World/View/Projection matrices (aka SRT → camera → lens)
-        private Matrix _world;       // Model space → World space (Scale/Rotate/Translate)
         private Matrix _view;        // World space → View space (camera transform)
         private Matrix _projection;  // View space → Clip space (perspective)
         private BasicEffect _unlitEffect; // Fixed-function style shader that understands our W/V/P and vertex colors
         private BasicEffect _litEffect;
         private DemoVPC_LL_Pyramid _pyramidPrimitive;
-        private float yRot;
-        private float xRot;
+        private MouseState _msState;
         private DemoPrimitiveTypeRect _rectPrimitive;
         private DemoVPC_TL_Triangle _litTrianglePrimitive;
         private DemoVPNT_TL_Cube_Lit _litCubePrimitive;
-
+        private KeyboardState _kbState;
+        private float _xRot, _yRot, _zRot;
+        private float _xRotSpeed = 16, _yRotSpeed = 16;
         #endregion
 
         public Main()
@@ -46,9 +46,7 @@ namespace IntroToMonoGame
             _graphics.ApplyChanges();
             // Tip: Alt+Enter toggles fullscreen in MonoGame templates.
 
-            // --- World matrix (SRT): start as identity (no scale/rotate/translate) ---
-            _world = Matrix.Identity;
-
+            #region Camera
             // --- View (camera) ---
             // Camera positioned at (0,0,10), looking at the origin, with "up" as +Y
             _view = Matrix.CreateLookAt(new Vector3(0, 0, 2), Vector3.Zero, Vector3.UnitY);
@@ -58,7 +56,9 @@ namespace IntroToMonoGame
             _projection = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.PiOver2, 16f / 9f, 0.1f, 1000f);
 
-            // --- Effect: tells the GPU how to transform and shade our vertices ---
+            #endregion
+ 
+            #region Unlit Material
             _unlitEffect = new BasicEffect(GraphicsDevice)
             {
                 VertexColorEnabled = true, // use per-vertex Color in VertexPositionColor
@@ -66,32 +66,38 @@ namespace IntroToMonoGame
                 //LightingEnabled = true
             };
 
+            #endregion
+            
+            #region Lit Material
             _litEffect = new BasicEffect(GraphicsDevice)
             {
                 TextureEnabled = true,
                 LightingEnabled = true,
-                PreferPerPixelLighting = true            
+                PreferPerPixelLighting = true
             };
 
             _litEffect.EnableDefaultLighting();
-            
+            #endregion
+
+            #region Primitive Initialization
             _pyramidPrimitive =
-                new DemoVPC_LL_Pyramid();
-            _pyramidPrimitive.InitializeVerts();
+                   new DemoVPC_LL_Pyramid();
+            _pyramidPrimitive.Initialize();
 
             _rectPrimitive =
              new DemoPrimitiveTypeRect();
-            _rectPrimitive.InitializeVerts();
+            _rectPrimitive.Initialize();
 
             _litTrianglePrimitive
                 = new DemoVPC_TL_Triangle();
-            _litTrianglePrimitive.InitializeVerts();
+            _litTrianglePrimitive.Initialize();
 
             //first lit object!!!
             var litCubeTexture = Content.Load<Texture2D>("mona_lisa");
             _litCubePrimitive
                 = new DemoVPNT_TL_Cube_Lit(litCubeTexture);
-            _litCubePrimitive.InitializeVert();
+            _litCubePrimitive.Initialize(); 
+            #endregion
 
             base.Initialize();
         }
@@ -102,18 +108,30 @@ namespace IntroToMonoGame
         }
         protected override void Update(GameTime gameTime)
         {
-            KeyboardState kbState = Keyboard.GetState();
-            if (kbState.IsKeyDown(Keys.A))
-                yRot += 1;
-            else if (kbState.IsKeyDown(Keys.D))
-                yRot -= 1;
-            if (kbState.IsKeyDown(Keys.W))
-                xRot += 1;
-            else if (kbState.IsKeyDown(Keys.S))
-                xRot -= 1;
+            _kbState = Keyboard.GetState();
 
-            MouseState msState = Mouse.GetState();
-            xRot = msState.ScrollWheelValue / 100f;
+            float dT = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            #region Automatic Rotation
+            _xRot += dT * _xRotSpeed;
+            _yRot += dT * _yRotSpeed;
+
+            #endregion
+
+            #region User input based rotation
+            //if (_kbState.IsKeyDown(Keys.W))
+            //    _xRot -= dT * _xRotSpeed;
+            //else if (_kbState.IsKeyDown(Keys.S))
+            //    _xRot += dT * _xRotSpeed;
+
+            //if (_kbState.IsKeyDown(Keys.A))
+            //    _yRot -= dT * _yRotSpeed;
+            //else if (_kbState.IsKeyDown(Keys.D))
+            //    _yRot += dT * _yRotSpeed;
+
+            //_msState = Mouse.GetState();
+            //_zRot = _msState.ScrollWheelValue / 100f; 
+            #endregion
 
             base.Update(gameTime);
         }
@@ -146,11 +164,14 @@ namespace IntroToMonoGame
 
             _litCubePrimitive.Draw(gameTime,
                 _litEffect,
-                Matrix.Identity * Matrix.CreateRotationY(MathHelper.ToRadians(yRot)),
+                Matrix.Identity
+                * Matrix.CreateRotationX(MathHelper.ToRadians(_xRot))
+                 * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot))
+                    * Matrix.CreateRotationZ(MathHelper.ToRadians(_zRot)),
                 _view,
                 _projection,
                 GraphicsDevice);
-            
+
             base.Draw(gameTime);
         }
     }

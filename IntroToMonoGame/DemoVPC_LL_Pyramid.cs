@@ -6,7 +6,7 @@ namespace IntroToMonoGame
     public class DemoVPC_LL_Pyramid
     {
         private VertexPositionColor[] _verts;
-        public void InitializeVerts()
+        public void Initialize()
         {
             _verts = new VertexPositionColor[16];
            
