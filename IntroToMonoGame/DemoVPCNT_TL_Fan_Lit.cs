@@ -79,6 +79,11 @@ namespace IntroToMonoGame
             effect.SpecularPower = _specularPower;
             effect.SpecularColor = _specularColor;
 
+            RasterizerState rsState = new RasterizerState();
+            rsState.CullMode = CullMode.None;
+            //rsState.FillMode = FillMode.WireFrame;
+            graphics.RasterizerState = rsState;
+
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
