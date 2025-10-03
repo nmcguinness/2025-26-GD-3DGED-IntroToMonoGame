@@ -1,25 +1,32 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct3D9;
 
 namespace IntroToMonoGame
 {
     public class DemoVPCNT_TL_Fan_Lit
     {
-        private Color color;
+       
         private VertexPositionColorNormalTexture[] _verts;
+        private Color _vertexColor;
+        private Texture2D _texture;
+        private Vector3 _diffuseColor;
+        private float _specularPower;
+        private Vector3 _specularColor;
+
         public void Initialize()
         {
             VertexPositionColorNormalTexture fanCentreTop
                  = new VertexPositionColorNormalTexture(
-                     0.5f * Vector3.UnitY,
-                     color,
+                     0.5f * Vector3.UnitY,  //(0,1,0) x 0.5f
+                     _vertexColor,
                      Vector3.UnitZ,
                      Vector2.Zero);
 
             VertexPositionColorNormalTexture fanCentreBottom
                  = new VertexPositionColorNormalTexture(
                      -0.5f * Vector3.UnitY,
-                     color,
+                     _vertexColor,
                      Vector3.UnitZ,
                      Vector2.Zero);
 
@@ -29,7 +36,7 @@ namespace IntroToMonoGame
                 fanCentreTop,
                     new VertexPositionColorNormalTexture(
                      new Vector3(1,0.5f,0),
-                     color,
+                     _vertexColor,
                      Vector3.UnitZ,
                      Vector2.UnitX),  //1
                 fanCentreBottom,
@@ -38,12 +45,12 @@ namespace IntroToMonoGame
                 fanCentreBottom,
                      new VertexPositionColorNormalTexture(
                      new Vector3(1,0.5f,0),
-                     color,
+                     _vertexColor,
                      Vector3.UnitZ,
                      Vector2.UnitX), //1
                  new VertexPositionColorNormalTexture(
                      new Vector3(1,-0.5f,0),
-                     color,
+                     _vertexColor,
                      Vector3.UnitZ,
                      Vector2.One),  //2
             };
@@ -54,7 +61,22 @@ namespace IntroToMonoGame
           Matrix world, Matrix view, Matrix projection,
          GraphicsDevice graphics)
         {
+            effect.World = world;
+            effect.View = view;
+            effect.Projection = projection;
+            effect.Texture = _texture;
+            effect.DiffuseColor = _diffuseColor;
+            effect.SpecularPower = _specularPower;
+            effect.SpecularColor = _specularColor;
 
+            foreach (var pass in effect.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+                graphics.DrawUserPrimitives(
+                    Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList, //all separate triangles
+                    _verts,
+                   0, 2); //fan on +x has 2 triangles
+            }
         }
     }
 }
