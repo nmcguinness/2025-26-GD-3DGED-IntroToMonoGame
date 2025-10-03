@@ -15,20 +15,38 @@ namespace IntroToMonoGame
         private SpriteBatch _spriteBatch;
 
         // World/View/Projection matrices (aka SRT → camera → lens)
+        #region Camera
         private Matrix _view;        // World space → View space (camera transform)
-        private Matrix _projection;  // View space → Clip space (perspective)
-        private BasicEffect _unlitEffect; // Fixed-function style shader that understands our W/V/P and vertex colors
-        private BasicEffect _litEffect;
+        private Matrix _projection;  // View space → Clip space (perspective) 
+        #endregion
+
+        #region Primitives
         private DemoVPC_LL_Pyramid _pyramidPrimitive;
-        private MouseState _msState;
         private DemoPrimitiveTypeRect _rectPrimitive;
         private DemoVPC_TL_Triangle _litTrianglePrimitive;
         private DemoVPNT_TL_Cube_Lit _litCubePrimitive;
-        private KeyboardState _kbState;
+        private DemoVPCNT_TL_Fan_Lit _litFanPrimitive; 
+        #endregion
+
+        #region Materials
+        private BasicEffect _unlitEffect; // Fixed-function style shader that understands our W/V/P and vertex colors
+        private BasicEffect _litEffect;
+        private BasicEffect _litVertexColorEffect;
+        #endregion
+
+        #region Input
+        private KeyboardState _kbState, _oldkbState;
+        private MouseState _msState;
+        #endregion
+
+        #region World-matrix driven movement
         private float _xRot, _yRot, _zRot;
         private float _xRotSpeed = 16, _yRotSpeed = 90;
-        private DemoVPCNT_TL_Fan_Lit _litFanPrimitive;
-        private BasicEffect _litVertexColorEffect;
+        #endregion
+
+        #region Demo switching
+        private int _demoIndex = 5;          // default: show fan grid 
+        #endregion
         #endregion
 
         public Main()
@@ -48,8 +66,9 @@ namespace IntroToMonoGame
 
             #region Camera
             // --- View (camera) ---
+            var cameraPosition = new Vector3(0, 0, 2);
             // Camera positioned at (0,0,10), looking at the origin, with "up" as +Y
-            _view = Matrix.CreateLookAt(new Vector3(0, 0, 2), Vector3.Zero, Vector3.UnitY);
+            _view = Matrix.CreateLookAt(cameraPosition, Vector3.Zero, Vector3.UnitY);
 
             // --- Projection (lens) ---
             // FOV = 90° (Pi/2), aspect ratio = 16:9, near=1, far=1000
@@ -112,8 +131,9 @@ namespace IntroToMonoGame
                 Content.Load<Texture2D>("mona_lisa"),
                 Color.White.ToVector3(),
                 32, //0-256
-                Color.Yellow.ToVector3()
-                );
+                Color.Yellow.ToVector3(),
+                CullMode.None, //see front and back faces
+                FillMode.Solid); //wireframe off
             _litFanPrimitive.Initialize(GraphicsDevice);
             #endregion
             base.Initialize();
@@ -126,76 +146,146 @@ namespace IntroToMonoGame
         protected override void Update(GameTime gameTime)
         {
             _kbState = Keyboard.GetState();
-
             float dT = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            #region Automatic Rotation
+            // rotation demo
             _xRot += dT * _xRotSpeed;
             _yRot += dT * _yRotSpeed;
 
-            #endregion
+            // --- edge-trigger input for 1..5 (both top row and numpad) ---
+            bool Pressed(Keys k) => _kbState.IsKeyDown(k) && _oldkbState.IsKeyUp(k);
 
-            #region User input based rotation
-            //if (_kbState.IsKeyDown(Keys.W))
-            //    _xRot -= dT * _xRotSpeed;
-            //else if (_kbState.IsKeyDown(Keys.S))
-            //    _xRot += dT * _xRotSpeed;
+            if (Pressed(Keys.D1)) _demoIndex = 1;   // Pyramid (unlit)
+            if (Pressed(Keys.D2)) _demoIndex = 2;   // Rect (unlit)
+            if (Pressed(Keys.D3)) _demoIndex = 3;   // Lit Triangle
+            if (Pressed(Keys.D4)) _demoIndex = 4;   // Lit Cube
+            if (Pressed(Keys.D5)) _demoIndex = 5;   // Fan
 
-            //if (_kbState.IsKeyDown(Keys.A))
-            //    _yRot -= dT * _yRotSpeed;
-            //else if (_kbState.IsKeyDown(Keys.D))
-            //    _yRot += dT * _yRotSpeed;
-
-            //_msState = Mouse.GetState();
-            //_zRot = _msState.ScrollWheelValue / 100f; 
-            #endregion
-
+            _oldkbState = _kbState;
             base.Update(gameTime);
         }
+
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Gray);
 
-            //_pyramidPrimitive.Draw(gameTime,
-            //    _unlitEffect,
-            //    Matrix.Identity 
-            //    * Matrix.CreateRotationX(MathHelper.ToRadians(xRot))
-            //    * Matrix.CreateRotationY(MathHelper.ToRadians(yRot)),
-            //    _view,
-            //    _projection,
-            //    GraphicsDevice);
+            // --- choose a demo by _demoIndex ---
+            switch (_demoIndex)
+            {
+                case 1: // Pyramid (unlit)
+                    _pyramidPrimitive.Draw(
+                        gameTime, _unlitEffect,
+                        Matrix.Identity
+                            * Matrix.CreateRotationX(MathHelper.ToRadians(_xRot))
+                            * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot)),
+                        _view, _projection, GraphicsDevice);
+                    break;
 
-            //_rectPrimitive.Draw(gameTime,
-            //    _unlitEffect,
-            //    Matrix.Identity,
-            //    _view,
-            //    _projection,
-            //    GraphicsDevice);
+                case 2: // Rect (unlit)
+                    _rectPrimitive.Draw(
+                        gameTime, _unlitEffect,
+                        Matrix.Identity,
+                        _view, _projection, GraphicsDevice);
+                    break;
 
-            //_litTrianglePrimitive.Draw(gameTime,
-            //   _unlitEffect,
-            //   Matrix.Identity,
-            //   _view,
-            //   _projection,
-            //   GraphicsDevice);
+                case 3: // Lit Triangle
+                    _litTrianglePrimitive.Draw(
+                        gameTime, _unlitEffect, // (uses vertex color; ok to keep unlit effect)
+                        Matrix.Identity,
+                        _view, _projection, GraphicsDevice);
+                    break;
 
-            //_litCubePrimitive.Draw(gameTime,
-            //    _litEffect,
-            //    Matrix.Identity
-            //    * Matrix.CreateRotationX(MathHelper.ToRadians(_xRot))
-            //     * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot))
-            //        * Matrix.CreateRotationZ(MathHelper.ToRadians(_zRot)),
-            //    _view,
-            //    _projection,
-            //    GraphicsDevice);
+                case 4: // Lit Cube (textured, spinning)
+                    _litCubePrimitive.Draw(
+                        gameTime, _litEffect,
+                        Matrix.Identity
+                            * Matrix.CreateRotationX(MathHelper.ToRadians(_xRot))
+                            * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot))
+                            * Matrix.CreateRotationZ(MathHelper.ToRadians(_zRot)),
+                        _view, _projection, GraphicsDevice);
+                    break;
 
-            _litFanPrimitive.Draw(gameTime,
-                _litVertexColorEffect,
-                Matrix.Identity 
-                * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot)),
-                _view, _projection, GraphicsDevice);
+                case 5: // Fan          
+                        _litFanPrimitive.Draw(
+                            gameTime, _litVertexColorEffect,
+                            Matrix.Identity
+                            * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot)),
+                            _view, _projection, GraphicsDevice);
+                        break;
+                    
+            }
 
             base.Draw(gameTime);
         }
+
+
+
+
+        #region Draw Primitive Helpers
+        // --- Draw Helpers (effect + world passed in) -------------------------------
+
+        private void DrawPyramid(GameTime gameTime, BasicEffect effect, Matrix world)
+        {
+            _pyramidPrimitive.Draw(
+                gameTime, effect, world,
+                _view, _projection, GraphicsDevice);
+        }
+
+        private void DrawRect(GameTime gameTime, BasicEffect effect, Matrix world)
+        {
+            _rectPrimitive.Draw(
+                gameTime, effect, world,
+                _view, _projection, GraphicsDevice);
+        }
+
+        private void DrawLitTriangle(GameTime gameTime, BasicEffect effect, Matrix world)
+        {
+            _litTrianglePrimitive.Draw(
+                gameTime, effect, world,
+                _view, _projection, GraphicsDevice);
+        }
+
+        private void DrawLitCube(GameTime gameTime, BasicEffect effect, Matrix world)
+        {
+            _litCubePrimitive.Draw(
+                gameTime, effect, world,
+                _view, _projection, GraphicsDevice);
+        }
+
+        private void DrawFan(GameTime gameTime, BasicEffect effect, Matrix world)
+        {
+            _litFanPrimitive.Draw(
+                gameTime, effect, world,
+                _view, _projection, GraphicsDevice);
+        }
+
+        // 4×4 grid of fans on the XY plane (z fixed). Each instance = baseWorld * perInstance
+        private void DrawFanGrid(
+            GameTime gameTime,
+            BasicEffect effect,
+            Matrix baseWorld,
+            int grid = 4,
+            float spacing = 2f,
+            float zOffset = 0f,
+            bool spinInPlane = true)
+        {
+            float half = (grid - 1) * 0.5f;
+
+            for (int gx = 0; gx < grid; gx++)
+                for (int gy = 0; gy < grid; gy++)
+                {
+                    float x = (gx - half) * spacing;
+                    float y = (gy - half) * spacing;
+
+                    // spin around Z to keep blades in XY (use _yRot for speed), then translate
+                    Matrix perInstance =
+                          (spinInPlane ? Matrix.CreateRotationZ(MathHelper.ToRadians(_yRot)) : Matrix.Identity)
+                        * Matrix.CreateTranslation(new Vector3(x, y, zOffset));
+
+                    DrawFan(gameTime, effect, perInstance * baseWorld);
+                }
+        }
+        #endregion
+
     }
 }
