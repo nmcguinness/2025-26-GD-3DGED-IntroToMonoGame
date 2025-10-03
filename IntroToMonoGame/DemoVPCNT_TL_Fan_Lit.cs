@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SharpDX.Direct3D9;
 
 namespace IntroToMonoGame
 {
@@ -8,6 +7,7 @@ namespace IntroToMonoGame
     {
        
         private VertexPositionColorNormalTexture[] _verts;
+        private VertexBuffer _vertsBuffer;
         private Color _vertexColor;
         private Texture2D _texture;
         private Vector3 _diffuseColor;
@@ -24,7 +24,7 @@ namespace IntroToMonoGame
             _specularColor = specularColor;
         }
 
-        public void Initialize()
+        public void Initialize(GraphicsDevice graphics)
         {
             VertexPositionColorNormalTexture fanCentreTop
                  = new VertexPositionColorNormalTexture(
@@ -65,6 +65,13 @@ namespace IntroToMonoGame
                      Vector2.One),  //2
             };
 
+            //reservation of space on the VRAM of the GFX card
+            _vertsBuffer = new VertexBuffer(graphics,
+                typeof(VertexPositionColorNormalTexture),
+                _verts.Length, BufferUsage.WriteOnly);
+
+            //loading/serializing the data to the GFX card
+            graphics.SetVertexBuffer(_vertsBuffer);
         }
 
         public void Draw(GameTime gameTime, BasicEffect effect,
@@ -83,6 +90,9 @@ namespace IntroToMonoGame
             rsState.CullMode = CullMode.None;
             //rsState.FillMode = FillMode.WireFrame;
             graphics.RasterizerState = rsState;
+
+            //pointing the GFX card to the vertices ALREADY in VRAM
+            graphics.SetVertexBuffer(_vertsBuffer);
 
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
