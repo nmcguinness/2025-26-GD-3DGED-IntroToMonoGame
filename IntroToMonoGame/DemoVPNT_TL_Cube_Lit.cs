@@ -12,6 +12,7 @@ namespace IntroToMonoGame
         public DemoVPNT_TL_Cube_Lit(Texture2D texture)
         {
             _texture = texture;
+
             
         }
 
