@@ -26,7 +26,7 @@ namespace IntroToMonoGame
         private DemoVPNT_TL_Cube_Lit _litCubePrimitive;
         private KeyboardState _kbState;
         private float _xRot, _yRot, _zRot;
-        private float _xRotSpeed = 16, _yRotSpeed = 16;
+        private float _xRotSpeed = 16, _yRotSpeed = 180;
         private DemoVPCNT_TL_Fan_Lit _litFanPrimitive;
         private BasicEffect _litVertexColorEffect;
         #endregion
@@ -107,9 +107,10 @@ namespace IntroToMonoGame
             _litCubePrimitive.Initialize();
 
             _litFanPrimitive
-                = new DemoVPCNT_TL_Fan_Lit(Color.White,
+                = new DemoVPCNT_TL_Fan_Lit(
+                    Color.White,
                 Content.Load<Texture2D>("mona_lisa"),
-                Color.Red.ToVector3(),
+                Color.White.ToVector3(),
                 16, //0-256
                 Color.Yellow.ToVector3()
                 );
@@ -190,7 +191,8 @@ namespace IntroToMonoGame
 
             _litFanPrimitive.Draw(gameTime,
                 _litVertexColorEffect,
-                Matrix.Identity,
+                Matrix.Identity 
+                * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot)),
                 _view, _projection, GraphicsDevice);
 
             base.Draw(gameTime);
