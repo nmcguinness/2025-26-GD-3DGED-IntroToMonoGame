@@ -14,6 +14,16 @@ namespace IntroToMonoGame
         private float _specularPower;
         private Vector3 _specularColor;
 
+        public DemoVPCNT_TL_Fan_Lit(Color vertexColor, Texture2D texture, 
+            Vector3 diffuseColor, float specularPower, Vector3 specularColor)
+        {
+            _vertexColor = vertexColor;
+            _texture = texture;
+            _diffuseColor = diffuseColor;
+            _specularPower = specularPower;
+            _specularColor = specularColor;
+        }
+
         public void Initialize()
         {
             VertexPositionColorNormalTexture fanCentreTop
@@ -25,10 +35,10 @@ namespace IntroToMonoGame
 
             VertexPositionColorNormalTexture fanCentreBottom
                  = new VertexPositionColorNormalTexture(
-                     -0.5f * Vector3.UnitY,
-                     _vertexColor,
-                     Vector3.UnitZ,
-                     Vector2.Zero);
+                     -0.5f * Vector3.UnitY,  //3 x 4bytes
+                     _vertexColor, //3 x 4bytes
+                     Vector3.UnitZ, //3 x 4bytes
+                     Vector2.UnitY); //2 x 4bytes
 
             _verts = new[]
             {

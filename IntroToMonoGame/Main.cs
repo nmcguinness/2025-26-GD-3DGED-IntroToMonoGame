@@ -27,6 +27,8 @@ namespace IntroToMonoGame
         private KeyboardState _kbState;
         private float _xRot, _yRot, _zRot;
         private float _xRotSpeed = 16, _yRotSpeed = 16;
+        private DemoVPCNT_TL_Fan_Lit _litFanPrimitive;
+        private BasicEffect _litVertexColorEffect;
         #endregion
 
         public Main()
@@ -74,7 +76,15 @@ namespace IntroToMonoGame
                 PreferPerPixelLighting = true
             };
 
+            _litVertexColorEffect = new BasicEffect(GraphicsDevice)
+            {
+                TextureEnabled = true,
+                LightingEnabled = true,
+                PreferPerPixelLighting = true
+            };
+
             _litEffect.EnableDefaultLighting();
+            _litVertexColorEffect.EnableDefaultLighting();
             #endregion
 
             #region Primitive Initialization
@@ -94,9 +104,17 @@ namespace IntroToMonoGame
             var litCubeTexture = Content.Load<Texture2D>("mona_lisa");
             _litCubePrimitive
                 = new DemoVPNT_TL_Cube_Lit(litCubeTexture);
-            _litCubePrimitive.Initialize(); 
-            #endregion
+            _litCubePrimitive.Initialize();
 
+            _litFanPrimitive
+                = new DemoVPCNT_TL_Fan_Lit(Color.White,
+                Content.Load<Texture2D>("mona_lisa"),
+                Color.Red.ToVector3(),
+                16, //0-256
+                Color.Yellow.ToVector3()
+                );
+            _litFanPrimitive.Initialize();
+            #endregion
             base.Initialize();
         }
 
@@ -160,15 +178,20 @@ namespace IntroToMonoGame
             //   _projection,
             //   GraphicsDevice);
 
-            _litCubePrimitive.Draw(gameTime,
-                _litEffect,
-                Matrix.Identity
-                * Matrix.CreateRotationX(MathHelper.ToRadians(_xRot))
-                 * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot))
-                    * Matrix.CreateRotationZ(MathHelper.ToRadians(_zRot)),
-                _view,
-                _projection,
-                GraphicsDevice);
+            //_litCubePrimitive.Draw(gameTime,
+            //    _litEffect,
+            //    Matrix.Identity
+            //    * Matrix.CreateRotationX(MathHelper.ToRadians(_xRot))
+            //     * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot))
+            //        * Matrix.CreateRotationZ(MathHelper.ToRadians(_zRot)),
+            //    _view,
+            //    _projection,
+            //    GraphicsDevice);
+
+            _litFanPrimitive.Draw(gameTime,
+                _litVertexColorEffect,
+                Matrix.Identity,
+                _view, _projection, GraphicsDevice);
 
             base.Draw(gameTime);
         }

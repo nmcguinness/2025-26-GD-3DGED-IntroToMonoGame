@@ -16,7 +16,8 @@ namespace IntroToMonoGame
 
             //line 1s-1e - base front
             _verts[0] = new VertexPositionColor(
-                new Vector3(-0.5f, 0, 0.5f), Color.Yellow);
+                new Vector3(-0.5f, 0, 0.5f),  //3 x 4bytes
+                Color.Yellow);                //3 x 4bytes
             _verts[1] = new VertexPositionColor(
                new Vector3(0.5f, 0, 0.5f), Color.Yellow);
 
