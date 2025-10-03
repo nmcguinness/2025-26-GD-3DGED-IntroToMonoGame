@@ -29,10 +29,10 @@ The work is structured week-by-week and will be developed **live in class** as a
 
 
 ### 2.2 Explore Primitive Types (before SRT)
-- [ ] Draw `LineList`, `LineStrip`, `TriangleList`, `TriangleStrip` via `DrawUserPrimitives`.
+- [x] Draw `LineList`, `LineStrip`, `TriangleList`, `TriangleStrip` via `DrawUserPrimitives`.
 - [ ] Show vertex counts & `primitiveCount` math; color-code to visualize connectivity.
 - [ ] Discuss difference in `S*R*T` order (e.g., `S*R*T` vs `T*R*S`).
-- [ ] Add keyboard for scale/rotation speed/reset; mouse scroll for scale or FOV.
+- [x] Add keyboard for scale/rotation speed/reset; mouse scroll for scale or FOV.
 - [ ] On-screen/debug readout of current values.
 - [ ] Simple camera dolly (Z) with keys (e.g., `Z/X`).
 
@@ -45,10 +45,10 @@ The work is structured week-by-week and will be developed **live in class** as a
 - [ ] Add **basic culling** (bounding sphere or AABB) and log culled count.
 
 ### Vertices & Indices; Winding; Vertex Layouts
-- [ ] Define a cube via **positions, normals, uvs** (`VertexPositionNormalTexture`).
-- [ ] Build index buffer for 12 triangles; confirm **winding order** (CW/CCW).
+- [x] Define a cube via **positions, normals, uvs** (`VertexPositionNormalTexture`).
+- [x] Build index buffer for 12 triangles; confirm **winding order** (CW/CCW).
 - [ ] Add an axis gizmo (`LineList`) to orient the scene.
-- [ ] (Optional later) normals verification with simple lighting.
+- [x] (Optional later) normals verification with simple lighting.
 
 ### VertexBuffer / IndexBuffer; Binding; DrawPrimitives / DrawIndexedPrimitives
 - [ ] Upload vertices to **`VertexBuffer`**; indices to **`IndexBuffer`**.
