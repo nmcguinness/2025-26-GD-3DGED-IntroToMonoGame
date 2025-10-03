@@ -63,6 +63,8 @@ namespace IntroToMonoGame
                      _vertexColor,
                      Vector3.UnitZ,
                      Vector2.One),  //2
+
+                 //(-X blade)
             };
 
             //reservation of space on the VRAM of the GFX card
@@ -98,7 +100,7 @@ namespace IntroToMonoGame
             {
                 pass.Apply();
                 graphics.DrawUserPrimitives(
-                    Microsoft.Xna.Framework.Graphics.PrimitiveType.TriangleList, //all separate triangles
+                    PrimitiveType.TriangleList, //all separate triangles
                     _verts,
                    0, 2); //fan on +x has 2 triangles
             }

@@ -114,7 +114,7 @@ namespace IntroToMonoGame
                 32, //0-256
                 Color.Yellow.ToVector3()
                 );
-            _litFanPrimitive.Initialize();
+            _litFanPrimitive.Initialize(GraphicsDevice);
             #endregion
             base.Initialize();
         }
