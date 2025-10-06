@@ -16,7 +16,8 @@ namespace IntroToMonoGame
         #region Fields
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
-        private ContentDictionary _textureDictionary;
+        private ContentDictionary<Texture2D> _textureDictionary;
+        private ContentDictionary<SpriteFont> _spriteFontDictionary;
 
         // World/View/Projection matrices (aka SRT → camera → lens)
         #region Camera
@@ -74,11 +75,14 @@ namespace IntroToMonoGame
         protected override void Initialize()
         {
             //load dictionaries
-            _textureDictionary = new ContentDictionary(this);
+            _textureDictionary = new ContentDictionary<Texture2D>(this);
+            _spriteFontDictionary = new ContentDictionary<SpriteFont>(this);
 
             //load textures
             _textureDictionary.Load("mona_lisa", "quirky_smile");
 
+            //load font
+            _spriteFontDictionary.Load("uiDebug", "uiDebug");
 
             // --- Window / backbuffer ---
             _graphics.PreferredBackBufferWidth = 1920;   // 1080p window
