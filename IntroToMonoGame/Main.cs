@@ -80,10 +80,6 @@ namespace IntroToMonoGame
             _textureDictionary.Load("mona_lisa", "quirky_smile");
 
 
-
-
-
-
             // --- Window / backbuffer ---
             _graphics.PreferredBackBufferWidth = 1920;   // 1080p window
             _graphics.PreferredBackBufferHeight = 1080;
