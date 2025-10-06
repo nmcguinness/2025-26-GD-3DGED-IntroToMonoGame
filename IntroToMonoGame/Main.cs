@@ -1,4 +1,5 @@
-﻿using IntroToMonoGame.Demos.BufferType.VerrtexBuffer;
+﻿using GDEngine;
+using IntroToMonoGame.Demos.BufferType.VerrtexBuffer;
 using IntroToMonoGame.Demos.PrimitveType;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -15,6 +16,7 @@ namespace IntroToMonoGame
         #region Fields
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
+        private ContentDictionary _textureDictionary;
 
         // World/View/Projection matrices (aka SRT → camera → lens)
         #region Camera
@@ -71,6 +73,17 @@ namespace IntroToMonoGame
 
         protected override void Initialize()
         {
+            //load dictionaries
+            _textureDictionary = new ContentDictionary(this);
+
+            //load textures
+            _textureDictionary.Load("mona_lisa", "quirky_smile");
+
+
+
+
+
+
             // --- Window / backbuffer ---
             _graphics.PreferredBackBufferWidth = 1920;   // 1080p window
             _graphics.PreferredBackBufferHeight = 1080;
@@ -131,15 +144,15 @@ namespace IntroToMonoGame
             _litTrianglePrimitive.Initialize();
 
             //first lit object!!!
-            var litCubeTexture = Content.Load<Texture2D>("mona_lisa");
+            
             _litCubePrimitive
-                = new DemoVPNT_TL_Cube_Lit(litCubeTexture);
+                = new DemoVPNT_TL_Cube_Lit(_textureDictionary.TryGet("quirky_smile"));
             _litCubePrimitive.Initialize();
 
             _litFanPrimitive
                 = new DemoVPCNT_TL_Fan_Lit(
                     Color.White,
-                Content.Load<Texture2D>("mona_lisa"),
+                _textureDictionary.TryGet("quirky_smile"),
                 Color.White.ToVector3(),
                 32, //0-256
                 Color.Yellow.ToVector3(),
@@ -178,12 +191,6 @@ namespace IntroToMonoGame
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
-
-            //load textures here
-           // _mona_lisa_texture = Content.Load<Texture2D>("mona_lisa");
-
-
-            //load spritefont for UI/debug/menu
 
         }
         protected override void Update(GameTime gameTime)
