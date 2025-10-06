@@ -178,6 +178,13 @@ namespace IntroToMonoGame
         protected override void LoadContent()
         {
             _spriteBatch = new SpriteBatch(GraphicsDevice);
+
+            //load textures here
+           // _mona_lisa_texture = Content.Load<Texture2D>("mona_lisa");
+
+
+            //load spritefont for UI/debug/menu
+
         }
         protected override void Update(GameTime gameTime)
         {
@@ -211,6 +218,11 @@ namespace IntroToMonoGame
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Gray);
+
+            //RasterizerState rsState = new RasterizerState();
+            //rsState.FillMode = FillMode.WireFrame;
+            //GraphicsDevice.RasterizerState = rsState;
+
 
             // --- choose a demo by _demoIndex ---
             switch (_demoIndex)

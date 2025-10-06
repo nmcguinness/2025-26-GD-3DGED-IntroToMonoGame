@@ -43,6 +43,7 @@ namespace IntroToMonoGame.Demos.PrimitveType
 
         public void Initialize(GraphicsDevice graphics)
         {
+
             //initialize based on user-prefs passed via constructor
             _rsState = new RasterizerState();
             _rsState.CullMode = _cullMode;

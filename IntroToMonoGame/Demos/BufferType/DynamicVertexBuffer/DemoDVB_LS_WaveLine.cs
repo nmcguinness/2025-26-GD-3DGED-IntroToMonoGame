@@ -12,7 +12,10 @@ namespace IntroToMonoGame
 
         public void Initialize(GraphicsDevice graphics)
         {
-            _dvb = new DynamicVertexBuffer(graphics, typeof(VertexPositionColor), _vertsCount, BufferUsage.WriteOnly);
+            _dvb = new DynamicVertexBuffer(graphics, typeof(VertexPositionColor), 
+                _vertsCount, BufferUsage.WriteOnly);
+
+            //no point in setting data here
         }
 
         public void Draw(GameTime gameTime, BasicEffect effect,
@@ -25,7 +28,7 @@ namespace IntroToMonoGame
             for (int i = 0; i < _vertsCount; i++)
             {
                 float x = MathHelper.Lerp(-8f, 8f, i / (_vertsCount - 1f));
-                float y = (float)Math.Sin(x * 1.2f + _t * 2.0f) * 0.8f;
+                float y = (float)Math.Sin(x * 1.2f + _t * 2.0f) * 0.1f;
                 var c = new Color((byte)(127 + 127 * Math.Sin(x + _t)), (byte)200, (byte)255);
                 verts[i] = new VertexPositionColor(new Vector3(x, y, 0), c);
             }

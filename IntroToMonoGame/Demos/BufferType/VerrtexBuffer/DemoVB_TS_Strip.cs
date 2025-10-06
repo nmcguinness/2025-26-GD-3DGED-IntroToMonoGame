@@ -41,7 +41,8 @@ namespace IntroToMonoGame.Demos.BufferType.VerrtexBuffer
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                graphics.DrawPrimitives(PrimitiveType.TriangleStrip, 0, _primitiveCount);
+                graphics.DrawPrimitives(PrimitiveType.TriangleStrip, 
+                    0, _primitiveCount);
             }
         }
     }
