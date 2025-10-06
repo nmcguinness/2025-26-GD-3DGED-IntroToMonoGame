@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace IntroToMonoGame
+namespace IntroToMonoGame.Demos.PrimitveType
 {
     
     public class DemoVPNT_TL_Cube_Lit

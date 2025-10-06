@@ -51,7 +51,7 @@ The work is structured week-by-week and will be developed **live in class** as a
 - [x] (Optional later) normals verification with simple lighting.
 
 ### VertexBuffer / IndexBuffer; Binding; DrawPrimitives / DrawIndexedPrimitives
-- [ ] Upload vertices to **`VertexBuffer`**; indices to **`IndexBuffer`**.
-- [ ] Replace `DrawUserPrimitives` with **`DrawIndexedPrimitives`** where appropriate.
+- [x] Upload vertices to **`VertexBuffer`**; indices to **`IndexBuffer`**.
+- [x] Replace `DrawUserPrimitives` with **`DrawIndexedPrimitives`** where appropriate.
 - [ ] Encapsulate in a **MeshRenderer** helper (`SetMesh`, `SetEffect`, `Render(W,V,P)`).
 - [ ] Add rasterizer state toggle: **wireframe ↔ solid** (cull modes if useful).

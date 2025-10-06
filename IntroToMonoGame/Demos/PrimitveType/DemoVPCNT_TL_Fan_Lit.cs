@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace IntroToMonoGame
+namespace IntroToMonoGame.Demos.PrimitveType
 {
     /// <summary>
     /// Draws a 4-blade fan using trianglelist and vertexbuffer

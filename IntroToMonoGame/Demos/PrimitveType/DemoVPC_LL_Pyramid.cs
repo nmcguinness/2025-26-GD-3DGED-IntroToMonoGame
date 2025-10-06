@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace IntroToMonoGame
+namespace IntroToMonoGame.Demos.PrimitveType
 {
     public class DemoVPC_LL_Pyramid
     {

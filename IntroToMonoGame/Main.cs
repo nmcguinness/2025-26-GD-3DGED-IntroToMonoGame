@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using IntroToMonoGame.Demos.BufferType.VerrtexBuffer;
+using IntroToMonoGame.Demos.PrimitveType;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -25,14 +27,25 @@ namespace IntroToMonoGame
         private DemoPrimitiveTypeRect _rectPrimitive;
         private DemoVPC_TL_Triangle _litTrianglePrimitive;
         private DemoVPNT_TL_Cube_Lit _litCubePrimitive;
-        private DemoVPCNT_TL_Fan_Lit _litFanPrimitive; 
+        private DemoVPCNT_TL_Fan_Lit _litFanPrimitive;
+        #endregion
+
+        #region Buffered Primitives
+        private DemoVB_TL_Triangle _vbTriangle;
+        private DemoVB_TS_Strip _vbStrip;
+        private DemoIB_TL_Quad _ibQuad;
+        private DemoIB_TL_Cube _ibCube;
+        private DemoIB_TL_Grid2x2 _ibGrid;
+        private DemoDVB_LS_WaveLine _dvbWaveLine;
+        private DemoDVB_TL_WavePlane_Unlit _dvbWavePlaneUnlit;
         #endregion
 
         #region Materials
-        private BasicEffect _unlitEffect; // Fixed-function style shader that understands our W/V/P and vertex colors
-        private BasicEffect _litEffect;
-        private BasicEffect _litVertexColorEffect;
-        #endregion
+        
+        private BasicEffect _unlitVPC_Effect; //Used when rendering VertexPositionColor primitives    
+        private BasicEffect _litVPNT_Effect;  //Used when rendering VertexPositionNormalTexture primitives
+        private BasicEffect _litVPCNT_Effect;  //Used when rendering VertexPositionColorNormalTexture primitives
+         #endregion
 
         #region Input
         private KeyboardState _kbState, _oldkbState;
@@ -76,34 +89,32 @@ namespace IntroToMonoGame
                 MathHelper.PiOver2, 16f / 9f, 0.1f, 1000f);
 
             #endregion
- 
-            #region Unlit Material
-            _unlitEffect = new BasicEffect(GraphicsDevice)
+
+            #region Materials (shaders - one per vertex type)
+            _unlitVPC_Effect = new BasicEffect(GraphicsDevice)
             {
                 VertexColorEnabled = true, // use per-vertex Color in VertexPositionColor
                 // Lighting is off by default; not needed for unlit colored lines.
                 //LightingEnabled = true
             };
 
-            #endregion
-            
-            #region Lit Material
-            _litEffect = new BasicEffect(GraphicsDevice)
+            _litVPNT_Effect = new BasicEffect(GraphicsDevice)
             {
                 TextureEnabled = true,
                 LightingEnabled = true,
                 PreferPerPixelLighting = true
             };
 
-            _litVertexColorEffect = new BasicEffect(GraphicsDevice)
+            _litVPNT_Effect.EnableDefaultLighting();
+
+            _litVPCNT_Effect = new BasicEffect(GraphicsDevice)
             {
                 TextureEnabled = true,
                 LightingEnabled = true,
                 PreferPerPixelLighting = true
             };
 
-            _litEffect.EnableDefaultLighting();
-            _litVertexColorEffect.EnableDefaultLighting();
+            _litVPCNT_Effect.EnableDefaultLighting();
             #endregion
 
             #region Primitive Initialization
@@ -136,6 +147,31 @@ namespace IntroToMonoGame
                 FillMode.Solid); //wireframe off
             _litFanPrimitive.Initialize(GraphicsDevice);
             #endregion
+
+            #region Buffered Primitives
+            _vbTriangle = new DemoVB_TL_Triangle();
+            _vbTriangle.Initialize(GraphicsDevice);
+
+            _vbStrip = new DemoVB_TS_Strip();
+            _vbStrip.Initialize(GraphicsDevice);
+
+            _ibQuad = new DemoIB_TL_Quad();
+            _ibQuad.Initialize(GraphicsDevice);
+
+            _ibCube = new DemoIB_TL_Cube();
+            _ibCube.Initialize(GraphicsDevice);
+
+            _ibGrid = new DemoIB_TL_Grid2x2();
+            _ibGrid.Initialize(GraphicsDevice);
+
+            _dvbWaveLine = new DemoDVB_LS_WaveLine();
+            _dvbWaveLine.Initialize(GraphicsDevice);
+
+            _dvbWavePlaneUnlit = new DemoDVB_TL_WavePlane_Unlit();
+            _dvbWavePlaneUnlit.Initialize(GraphicsDevice);
+            #endregion
+
+
             base.Initialize();
         }
 
@@ -156,11 +192,18 @@ namespace IntroToMonoGame
             bool Pressed(Keys k) => _kbState.IsKeyDown(k) && _oldkbState.IsKeyUp(k);
 
             if (Pressed(Keys.D1)) _demoIndex = 1;   // Pyramid (unlit)
-            if (Pressed(Keys.D2)) _demoIndex = 2;   // Rect (unlit)
-            if (Pressed(Keys.D3)) _demoIndex = 3;   // Lit Triangle
-            if (Pressed(Keys.D4)) _demoIndex = 4;   // Lit Cube
-            if (Pressed(Keys.D5)) _demoIndex = 5;   // Fan
-
+            else if (Pressed(Keys.D2)) _demoIndex = 2;   // Rect (unlit)
+            else if (Pressed(Keys.D3)) _demoIndex = 3;   // Lit Triangle
+            else if (Pressed(Keys.D4)) _demoIndex = 4;   // Lit Cube
+            else if (Pressed(Keys.D5)) _demoIndex = 5;   // Fan
+            else if (Pressed(Keys.D6)) _demoIndex = 6;  // VB Triangle
+            else if (Pressed(Keys.D7)) _demoIndex = 7;  // VB Strip
+            else if (Pressed(Keys.D8)) _demoIndex = 8;  // IB Quad
+            else if (Pressed(Keys.D9)) _demoIndex = 9;  // IB Cube
+            else if (Pressed(Keys.D0)) _demoIndex = 10; // IB Grid
+            else if (Pressed(Keys.OemMinus)) _demoIndex = 11; // DVB WaveLine
+            else if (Pressed(Keys.OemPlus)) _demoIndex = 12; // DVB WavePlaneUnlit
+   
             _oldkbState = _kbState;
             base.Update(gameTime);
         }
@@ -174,7 +217,7 @@ namespace IntroToMonoGame
             {
                 case 1: // Pyramid (unlit)
                     _pyramidPrimitive.Draw(
-                        gameTime, _unlitEffect,
+                        gameTime, _unlitVPC_Effect,
                         Matrix.Identity
                             * Matrix.CreateRotationX(MathHelper.ToRadians(_xRot))
                             * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot)),
@@ -183,21 +226,21 @@ namespace IntroToMonoGame
 
                 case 2: // Rect (unlit)
                     _rectPrimitive.Draw(
-                        gameTime, _unlitEffect,
+                        gameTime, _unlitVPC_Effect,
                         Matrix.Identity,
                         _view, _projection, GraphicsDevice);
                     break;
 
                 case 3: // Lit Triangle
                     _litTrianglePrimitive.Draw(
-                        gameTime, _unlitEffect, // (uses vertex color; ok to keep unlit effect)
+                        gameTime, _unlitVPC_Effect, // (uses vertex color; ok to keep unlit effect)
                         Matrix.Identity,
                         _view, _projection, GraphicsDevice);
                     break;
 
                 case 4: // Lit Cube (textured, spinning)
                     _litCubePrimitive.Draw(
-                        gameTime, _litEffect,
+                        gameTime, _litVPNT_Effect,
                         Matrix.Identity
                             * Matrix.CreateRotationX(MathHelper.ToRadians(_xRot))
                             * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot))
@@ -206,13 +249,56 @@ namespace IntroToMonoGame
                     break;
 
                 case 5: // Fan          
-                        _litFanPrimitive.Draw(
-                            gameTime, _litVertexColorEffect,
-                            Matrix.Identity
-                            * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot)),
-                            _view, _projection, GraphicsDevice);
-                        break;
-                    
+                    _litFanPrimitive.Draw(
+                        gameTime, _litVPCNT_Effect,
+                        Matrix.Identity
+                        * Matrix.CreateRotationY(MathHelper.ToRadians(_yRot)),
+                        _view, _projection, GraphicsDevice);
+                    break;
+
+                case 6: 
+                    _vbTriangle.Draw(gameTime, _unlitVPC_Effect, 
+                        Matrix.Identity, 
+                        _view, _projection, GraphicsDevice); 
+                    break;
+
+                case 7: 
+                    _vbStrip.Draw(gameTime, _unlitVPC_Effect, 
+                        Matrix.Identity, 
+                        _view, _projection, GraphicsDevice); 
+                    break;
+
+                case 8: 
+                    _ibQuad.Draw(gameTime, _unlitVPC_Effect, 
+                        Matrix.Identity, 
+                        _view, _projection, GraphicsDevice); 
+                    break;
+                
+                case 9: 
+                    _ibCube.Draw(gameTime, _unlitVPC_Effect, 
+                        Matrix.Identity, 
+                        _view, _projection, GraphicsDevice); 
+                    break;
+                
+                case 10: 
+                    _ibGrid.Draw(gameTime, _unlitVPC_Effect, 
+                        Matrix.Identity, 
+                        _view, _projection, GraphicsDevice); 
+                    break;
+                
+                case 11: 
+                    _dvbWaveLine.Draw(gameTime, _unlitVPC_Effect, 
+                        Matrix.Identity, 
+                        _view, _projection, GraphicsDevice); 
+                    break;
+                
+                case 12: 
+                    _dvbWavePlaneUnlit.Draw(gameTime, _unlitVPC_Effect, 
+                        Matrix.Identity
+                         * Matrix.CreateRotationX(MathHelper.ToRadians(20))
+                        * Matrix.CreateTranslation(0, -2, 0), 
+                        _view, _projection, GraphicsDevice); 
+                    break;
             }
 
             base.Draw(gameTime);
