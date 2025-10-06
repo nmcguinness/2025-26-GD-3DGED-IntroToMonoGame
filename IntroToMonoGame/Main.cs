@@ -4,6 +4,7 @@ using IntroToMonoGame.Demos.PrimitveType;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace IntroToMonoGame
 {
@@ -82,7 +83,7 @@ namespace IntroToMonoGame
             _textureDictionary.Load("mona_lisa", "quirky_smile");
 
             //load font
-            _spriteFontDictionary.Load("uiDebug", "uiDebug");
+            _spriteFontDictionary.Load("ui_debug", "ui_debug");
 
             // --- Window / backbuffer ---
             _graphics.PreferredBackBufferWidth = 1920;   // 1080p window
@@ -320,8 +321,31 @@ namespace IntroToMonoGame
                     break;
             }
 
+
+            DrawDebugUI();
+
             base.Draw(gameTime);
         }
+
+        private void DrawDebugUI()
+        {
+            _spriteBatch.Begin();
+
+            _spriteBatch.DrawString(
+                _spriteFontDictionary.TryGet("ui_debug"),
+                "Hello World!",
+                new Vector2(200, 200),
+                Color.Red,
+                MathHelper.ToRadians(0),
+                new Vector2(0, 0),
+                1,
+                SpriteEffects.None,
+                0);
+
+            _spriteBatch.End();
+        }
+
+
 
 
 

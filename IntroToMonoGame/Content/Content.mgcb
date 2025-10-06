@@ -25,3 +25,10 @@
 /processorParam:TextureFormat=Color
 /build:mona_lisa.png
 
+#begin ui_debug.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:ui_debug.spritefont
+
